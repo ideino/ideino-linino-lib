@@ -1,0 +1,7 @@
+{ 
+	"name" : "ideino-linino-lib",
+	"main" : "./index.js",
+	"dependencies": {
+		"socket.io": "*"
+	  }	
+}
