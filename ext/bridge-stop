@@ -1,0 +1,6 @@
+#!/bin/sh
+#for pid in `pidof $1`; do
+for pid in `top -n 1 | grep $1 | awk {'print $1'}`; do
+  	#echo $pid;
+	kill -9 $pid
+done

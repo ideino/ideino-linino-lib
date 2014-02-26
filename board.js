@@ -1,7 +1,8 @@
 //Board
 var server = 'localhost',
 	port = 9810,
-	bridgefile = 'bridge-firmata.py';
+	bridgefile = 'bridge-firmata.py',
+	bridgestop = 'bridge-stop';
 
 var	io = require('socket.io').listen(port), 
 	layout = require('./utils/layout').arduino_yun,
@@ -9,7 +10,8 @@ var	io = require('socket.io').listen(port),
 	path = require('path'),
 	socket;
 
-var bridge = path.join(__dirname,'ext',bridgefile);
+var bridge = path.join(__dirname,'ext',bridgefile),
+	stop = path.join(__dirname,'ext',bridgestop);
 	
 io.set('transports',['xhr-polling']);
 io.set('log level',1);
@@ -19,6 +21,11 @@ var spawn = require('child_process').spawn,
 	exec = require('child_process').exec;
     //kill = spawn('kill',['-9 `top -n 1 | grep bridge-firmata.py | awk {\'print $1\'}`']);
 	
+	exec("sh " + stop + " python", function (error, stdout, stderr) {
+			proc  = spawn('python',[bridge]);
+	});
+	
+/*	
 var	kill = exec("kill -9 `top -n 1 | grep proj | awk {'print $1'}`",
 	function (error, stdout, stderr) {
 		proc  = spawn('python',[bridge]);
@@ -31,7 +38,7 @@ var	kill = exec("kill -9 `top -n 1 | grep proj | awk {'print $1'}`",
 			console.log('stderr: ' + data);
 		});
 	});
-	
+*/	
 	
 io.sockets.on('connection', function (client) {
 	var address = client.handshake.address;
