@@ -7,9 +7,6 @@ io.set('transports',['xhr-polling','websocket']);
 io.set('log level',1);
 
 
-
-
-
 io.sockets.on('connection', function (client) {
 	var address = client.handshake.address;
 	

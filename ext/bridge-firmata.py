@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-import json, pyfirmata, thread, time
-from socketIO_client import SocketIO
+import json, pyfirmata, json, thread, threading, time, socket
 from pyfirmata import Arduino, util
 
 #=====Arduino======================================
@@ -24,13 +23,13 @@ hash_getpin_a={'0':0,'1':0,'2':0,'3':0,'4':0,'5':0}
 hash_tx={'A0':-1,'A1':-1,'A2':-1,'A3':-1,'A4':-1,'A5':-1,'D2':-1,'D3':-1,'D4':-1,'D5':-1,'D6':-1,'D7':-1,'D8':-1,'D9':-1,'D10':-1,'D11':-1,'D12':-1,'D13':-1}
 emit=[]#pin emit
 x=True    #boolean variable
-#socketIO=None
+
 
 
         
-def excute_command (*args):                 #tramite seriale - inizio
+def excute_command (command):                 #tramite seriale - inizio
 
-    cmd = args[0]           #il contenuto del messaggio xmpp, ovvero il comando
+    cmd = command           #il contenuto del messaggio xmpp, ovvero il comando
     print cmd
     for i in range(len(cmd['command'])):
 
@@ -127,9 +126,9 @@ def excute_command (*args):                 #tramite seriale - inizio
                 print "Command ERROR: pin out of range"
 
 
-def polling(thread, delay, socketIO):
+def polling(thread, delay, socket):
             
-        
+    print 'start polling'   
     while True:
     
         time.sleep(delay)
@@ -163,55 +162,64 @@ def polling(thread, delay, socketIO):
             if cmp(hash_tx[i],hash_tmp[i]):
                 hash_tx[i]=hash_tmp[i]
                 try:
+                    socket.send('{"cmd": "read-back", "pin": "'+i.upper()+'", "value":'+str(hash_tx[i])+'}')
+                except:
+                    print 'Sever disconnected'
+
+                """
+                try:
                     socketIO.emit('read-back-'+i.upper(), json.dumps({'value':hash_tx[i]}))
                 except:
                     print 'Sever disconnected'
 
-"""
-def socket_connection(thread, delay, socketIO ):
-    while True:
-        time.sleep(delay)
-        print 'socket_conn'
-        print socketIO.connected
-        
 
+                """
+def handle(client):        #handle websocket
+
+    while 1:
         try:
-            if socketIO in None:
-                socketIO = SocketIO('192.168.1.14', 9810)
-                socketIO.on('command', excute_command)
-                socketIO.wait()
-            #socketIO = SocketIO('10.0.0.7', 1557)
+            data = client.recv(1024)
+            #print 'data from server: '+data
+            command=json.loads(data)
+            excute_command(command)
+            if not data:
+                print 'no data'
+                break
+            """
+            for i in range(len(cmd['command'])):
+                if str(cmd['command'][i]['pin'])== 'D13':
+                    client.sendall('{"cmd": "read-back", "pin": "D13", "value": 1}')
+                elif str(cmd['command'][i]['pin'])== 'D8':
+                    client.sendall('{"cmd": "read-back", "pin": "D8", "value": 1}') 
+                
+            #client.sendall('{"cmd": "read-back", "pin": "D13", "value": 1}')                                           #se ricevo un comando di lettura invio una risposta
+            #client.sendall('{"cmd": "read-back", "pin": "D13", "value": 1}')
+            """
         except:
-            print 'socket connection refused'
-"""
+            print "server disconnected"
+            break
+    print 'Client closed'
+    client.close()
 
 
 
 if __name__ == '__main__':
 
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        #client.connect(('10.0.0.9', 1557))
+        client.connect(('127.0.0.1', 9810))
+    except:
+        print 'unable to start socket connection'
+
+    
     
     try:
-        socketIO = SocketIO('localhost', 9810)
-        #socketIO = SocketIO('10.0.0.7', 1557)
-    except:
-        print 'socket connection refused'
-     
-    try:
-        if x:
-            thread.start_new_thread( polling, ("Thread-1", 0.05, socketIO) )
+        thread.start_new_thread( polling, ("Thread-1", 0.05, client) )
     except:
         print "Error: unable to start polling thread"
-    
-    """
-    try:
-            #print("Done")
-            thread.start_new_thread( socket_connection, ("Thread-1", 5,socketIO ) )
-    except:
-            print "Error: unable to start polling thread"
-    """
 
-    socketIO.on('command', excute_command)
-    socketIO.wait()
-        
+    handle(client)  
+    
 
 
