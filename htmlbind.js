@@ -1,5 +1,5 @@
 //Board
-var	io = require('socket.io').listen(9812), 
+var	io = require('socket.io').listen(9812,{log:false}), 
 	utils = require('./utils/utils'),
 	socket;
 
@@ -39,7 +39,7 @@ function read(id, param, callback) {
 		if(typeof(socket) == 'undefined' ){
 			setTimeout(function(){
 				read(id,param,callback);
-			}, 50);
+			}, 500);
 			return;
 		}
 		var cmd = {command:[{cmd: 'read', param: param, id: id}]}
