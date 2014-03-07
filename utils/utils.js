@@ -6,6 +6,4 @@ var modes = { INPUT : 'input', OUTPUT : 'output', PWM: 'pwm', SERVO: 'servo'},
 exports.MODES = modes;
 exports.HIGH = hi;
 exports.LOW = lo;
-exports.TRUE = TRUE;
-exports.FALSE = FALSE;
 exports.PARAMS = params;
