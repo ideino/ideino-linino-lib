@@ -2,8 +2,12 @@
 # -*- coding: utf-8 -*-
 
 
-import json, pyfirmata, thread, threading, time, socket
+import json, pyfirmata, thread, time, socket, logging,os
 from pyfirmata import Arduino, util
+import logging.handlers
+
+
+dirname, filename = os.path.split(os.path.abspath(__file__))
 
 #=====Arduino======================================
 arduino_serial_port = '/dev/ttySPI0'
@@ -13,21 +17,22 @@ arduino = Arduino(arduino_serial_port,baudrate=arduino_serial_brate)
 iterator = util.Iterator(arduino)
 iterator.start()
 
-
 #====variabile e strutture dati====================
-host=''              #'127.0.0.1'                #socket
+logger_file=dirname+'/bridge-firmata.log'
+host=''
+sock=[None]
 port= 9810                     #1557
 gap=2                                                                                                       #read gap param
-hash_getpin_d={'0':0,'1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,'8':0,'9':0,'10':0,'11':0,'12':0,'13':0}      #get_pin dei pin digitali
-#hash_reporting_a={'0':0,'1':0,'2':0,'3':0,'4':0,'5':0}  
+hash_getpin_d={}                                                                                            #get_pin dei pin digitali
 hash_tx={'A0':-1,'A1':-1,'A2':-1,'A3':-1,'A4':-1,'A5':-1,'D2':-1,'D3':-1,'D4':-1,'D5':-1,'D6':-1,'D7':-1,'D8':-1,'D9':-1,'D10':-1,'D11':-1,'D12':-1,'D13':-1}
 read_pin=[]                                                     #pin emit
 
 
         
-def excute_command (command):               
+def excute_command (command):
 
-    cmd = command                              
+    cmd = json.loads(command)
+        
     for i in range(len(cmd['command'])):                    #read python object param
 
         cmd_type=cmd['command'][i]['cmd'].upper()
@@ -37,6 +42,12 @@ def excute_command (command):
         cmd_io=''
         cmd_value=''
         cmd_firm=''
+        if (cmd_ad=='a' and int(cmd_pin)>5):
+            logger.warning('Pin '+cmd_pin+' is not an analog pin')
+            break
+        elif (cmd_ad=='d' and int(cmd_pin) >13):
+            logger.warning('Pin '+cmd_pin+' is not an digital pin')
+            break
 
    #MODE: INPUT,OUTPUT, PWM, SERVO
 
@@ -44,14 +55,13 @@ def excute_command (command):
 
             cmd_io = cmd['command'][i]['mode'][0]           #cmd_io puo essere input o output (i=input, o=output)
             cmd_firm = cmd_ad+':'+cmd_pin+':'+cmd_io        #firmata command (ex: 'd:13:o')
-            if(cmd_ad=='a'):
-                pass
-                #print 'Analog pin can operate only in input mode'
+            if(cmd_ad=='a' and cmd_io!='i'):
+                logger.warning('Analog pin '+cmd_ad.upper()+cmd_pin+' can only operate in input mode')
             elif(cmd_ad=='d'):
-                if (hash_getpin_d[cmd_pin]==0): 
+                if cmd_pin not in hash_getpin_d: 
                     arduino.digital[int(cmd_pin)].write(0)              #reset pin a 0
                     pin_d = arduino.get_pin(cmd_firm)		        
-                    hash_getpin_d[cmd_pin]= pin_d            
+                    hash_getpin_d.update({cmd_pin:pin_d})
 
                 if(cmd_io == 'i'):
                     if (hash_getpin_d[cmd_pin].mode != 0):            #se il pin è gia in modalità input non faccio il reset del pin (0 INPUT - 1 OUTPUT - 2 ANALOG - 3 PWM - 4 SERVO)
@@ -67,9 +77,8 @@ def excute_command (command):
 
                 if(cmd_io == 's'):
                     hash_getpin_d[cmd_pin].mode=pyfirmata.SERVO
-
                 
-            #print "Command >>> Type: " + cmd_type + "; Pin:" + cmd_pin + "; A/D:" + cmd_ad + "; I/O:" + cmd_io + "; Firmata:" + cmd_firm
+            logger.info("Command >>> Type: " + cmd_type + "; Pin:" + cmd_pin + "; A/D:" + cmd_ad + "; I/O:" + cmd_io + "; Firmata:" + cmd_firm)
 
 
             #Write COMMAND
@@ -80,118 +89,137 @@ def excute_command (command):
 
             try:
                 if (cmd_ad == 'a'):
-                    pass
-                    #print "Command ERROR: analog write impossible"
+                    logger.warning("Write on analog pin "+cmd_pin+" is impossible: Arduino don't support analog write")
                 elif (cmd_ad == 'd'):
                     arduino.digital[int(cmd_pin)].write(float(cmd_value))
-                    #print "Command >>> Type: "+cmd_type+"; Pin:"+cmd_pin+"; A/D:"+cmd_ad+"; Write Value:"+str(cmd_value)
+                    logger.debug("Command >>> Type: "+cmd_type+"; Pin:"+cmd_pin+"; A/D:"+cmd_ad+"; Write Value:"+str(cmd_value))
 
             except:
-                pass
-                #print "Command ERROR: pin is in input mode"
+                logger.error('Write on digital pin '+cmd_pin+' is impossible: pin is in input mode')
 
                     
-
             #Read COMMAND  
 
         elif( cmd_type=='READ'): 
 
-            cmd_read_value = -1
-            pin_t=(cmd_ad+cmd_pin).upper()
+            pin_r=(cmd_ad+cmd_pin).upper()
                                                                             #pin with read request            
             try:
                 if cmd_ad == 'd':
-                    if pin_t not in read_pin:
-                        read_pin.append((cmd_ad+cmd_pin).upper())
+                    if pin_r not in read_pin:                       
+                        read_pin.append((pin_r))
                         
                 elif cmd_ad == 'a': 
                     arduino.analog[int(cmd_pin)].enable_reporting()
-                    if pin_t not in read_pin:
-                        read_pin.append((cmd_ad+cmd_pin).upper())
+                    if pin_r not in read_pin:
+                        read_pin.append((pin_r))
                 
-                #print "Command >>> Type: "+cmd_type+"; Pin:"+cmd_pin+"; A/D:"+cmd_ad
+                logger.debug("Command >>> Type: "+cmd_type+"; Pin:"+cmd_pin+"; A/D:"+cmd_ad)
 
             except:
-                pass
-                #print "Command ERROR: pin out of range"
+                logger.error('read command error')
+ 
 
-
-def polling(thread, delay, socket):
-    #print 'polling'
+def polling(thread, delay):
     while True:
     
         time.sleep(delay)
         hash_tmp={'A0':hash_tx['A0'],'A1':hash_tx['A1'],'A2':hash_tx['A2'],'A3':hash_tx['A3'],'A4':hash_tx['A4'],'A5':hash_tx['A5'],'D2':hash_tx['D2'],'D3':hash_tx['D3'],'D4':hash_tx['D4'],'D5':hash_tx['D5'],'D6':hash_tx['D6'],'D7':hash_tx['D7'],'D8':hash_tx['D8'],'D9':hash_tx['D9'],'D10':hash_tx['D10'],'D11':hash_tx['D11'],'D12':hash_tx['D12'],'D13':hash_tx['D13']}   
 
-            #====DIGITAL PIN=====
-    
-
+        #========DIGITAL PIN===========
+        
         for i in range (2,14):                                      # i pin 0 1 sono riservati alla seriale
             hash_key="D"+str(i)
-            if(hash_getpin_d[str(i)]!=0):                           # verifico che sia stato fatto il get_pin del pin interessato altrimenti la riga sotto da un errore
+            if str(i) in hash_getpin_d:                           # verifico che sia stato fatto il get_pin del pin interessato altrimenti la riga sotto da un errore
                 if hash_key in read_pin:                                # leggo il pin solo se è in input in modo da ridurre il traffico di messaggi xmpp
                     if arduino.digital[i].read():
                         hash_tmp[hash_key]= 1                       # invio 1 e 0 al posto di True e False
                     else:                                           #(arduino.digital[i].read()== None) or (arduino.digital[i].read()== False):
                         hash_tmp[hash_key]= 0
 
-          #=====ANALOG PIN==========    
+        #========ANALOG PIN=============    
         for y in range (0,6):
             hash_key="A"+str(y)
-            value=arduino.analog[y].read()    
-            if (value is not None) and (hash_key in read_pin) :                
-                value = int(value * 1023)
-                if hash_tx[hash_key]+gap < value or hash_tx[hash_key]-gap > value:
-                    hash_tmp[hash_key]= value                                
-            elif hash_key in read_pin:
-                hash_tmp[hash_key]=0
+            if hash_key in read_pin:                                #faccio la lettura solo se è stata effettuata la richiesta
+                value=arduino.analog[y].read()    
+                if value is not None:                
+                    value = int(value * 1023)
+                    if hash_tx[hash_key]+gap < value or hash_tx[hash_key]-gap > value:
+                        hash_tmp[hash_key]= value                                
+                else:
+                    hash_tmp[hash_key]=0
 
 
         for i in hash_tmp.keys():                                   
             if cmp(hash_tx[i],hash_tmp[i]):
                 hash_tx[i]=hash_tmp[i]
-                try:
-                    socket.send('{"cmd": "read-back", "pin": "'+i.upper()+'", "value":'+str(hash_tx[i])+'}')
-                except:
-                    #print 'Server disconnected'
-                    pass
-
+                if sock[0] is not None:
+                    sock[0].sendall('{"cmd": "read-back", "pin": "'+i.upper()+'", "value":'+str(hash_tx[i])+'}')
+		    time.sleep(0.025)
 
 def connection(s):
-    clients = [] 
     while 1:
         conn, addr = s.accept()
-        #print 'connection'
-        clients.append(conn)
-        handle(conn,addr,clients)
+        sock[0]=conn
+        logger.info('Client connected:'+str(addr))
+        handle(conn,addr)
+        
 
-def handle(s, addr, clients):       #handle websocket
-    try:
-        thread.start_new_thread( polling, ("Thread-1", 0.05,s))
-    except:
-        print "Error: unable to start polling thread"
+def handle(conn, addr):       #handle websocket
 
     while 1:
-        data = s.recv(1024)
-        if not data:
-            #print "No data"
+        try:
+            data = conn.recv(1024)
+        except socket.error , msg:
+            logger.error('data receive failed. Error code: '+str(msg[0])+' Error message: ' + msg[1])
             break
-        command=json.loads(data)
-        excute_command(command)
-        #print 'client to server: '+data
-        #s.send('{"cmd": "read-back", "pin": "5", "value":3}')
-                                 #se ricevo un comando di lettura invio una risposta          
-    #print 'Client closed:', addr
-    s.close()
+        if not data:
+            break
+        try:        
+            if '}{' in data:
+                data=data.replace('}{','}-{')
+                data=data.split('-')
+                for i in data:
+                    excute_command(i)
+                    logger.debug('data received: '+i)
+            else:
+                excute_command(data)
+        except :
+            logger.error('json parse error on this command: '+data)
+    
+    logger.debug('Client closed:'+str(addr))
+    sock[0]=None
+    conn.close()
 
 
 if __name__ == "__main__":
 
+    
+    
+    logger = logging.getLogger('bridge-firmata')
+    hdlr_file = logging.handlers.RotatingFileHandler(logger_file, maxBytes=100000, backupCount=3)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+    hdlr_file.setFormatter(formatter)
+    logger.addHandler(hdlr_file)                #file debug
+    logger.setLevel(logging.INFO)              #WARNING,INFO,ERROR
+
+    
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)     
-    s.bind((host, port))
+    try:
+        s.bind((host, port))
+    except socket.error , msg:
+        logger.error('Bind failed. Error code: '+str(msg[0])+' Error message: ' + msg[1])
     s.listen(5)
+
+    try:
+        thread.start_new_thread( polling, ("Thread-1", 0.05))
+        logger.info('Polling thread started')
+    except:
+        logger.error('unable to start polling thread')
+
     connection(s)
+        
     
     
 

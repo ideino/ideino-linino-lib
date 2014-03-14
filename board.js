@@ -1,7 +1,5 @@
 //Board
-var server = '127.0.0.1',
-	port = 9810,
-	bridgefile = 'bridge-firmata.py',
+var bridgefile = 'bridge-firmata.py',
 	bridgestop = 'bridge-stop',
 	debug = false;
 	
@@ -11,7 +9,20 @@ var	net = require('net'),
 	path = require('path'),
 	EventEmitter = require('events').EventEmitter,
 	socket,
-	pinReg = {};	
+	pinReg = {},		//list for storing the mode of every used pin of the board
+	writeBuffer = [];	//buffer for managing the write request sent to the board
+	
+
+//CONST	
+var	BUFFER_SIZE = 1000,			//items -> is the size of the buffer containing the write commands
+	BUFFER_SPEED = 25,			//millis -> is the speed for sending requests from the buffer to the board
+	READ_RETRY_SPEED = 1800,		//millis -> is the speed for retry to send the read command
+	MODE_RETRY_SPEED = 50,		//millis -> is the speed for retry to send the pin mode command
+	WAIT_BRIDGE_TIME = 10000,
+	ENCODING = 'utf8'
+	SERVER = '127.0.0.1',
+	PORT = 9810;
+	
 
 var bridge = path.join(__dirname,'ext',bridgefile),
 	stop = path.join(__dirname,'ext',bridgestop),
@@ -38,9 +49,13 @@ exec("sh " + stop + " python", function (error, stdout, stderr) {
 		});
 	}
 	setTimeout(function(){
-		socket = net.connect({port:port, host:server},function(qlcosa) {
-			socket.setEncoding("utf8");
+		socket = net.connect({port:PORT, host:SERVER},function() {
+			socket.setEncoding(ENCODING);
 			console.log("Bridge Connection Success");
+			//sending event from buffer
+			setInterval(function(){
+				sendWriteRequest();
+			},BUFFER_SPEED);
 			
 		});
 		socket.on('data', function(data) {
@@ -59,7 +74,7 @@ exec("sh " + stop + " python", function (error, stdout, stderr) {
 			process.exit(1);
 		});
 			
-	},10000);
+	},WAIT_BRIDGE_TIME);
 	
 	
 });
@@ -70,26 +85,27 @@ exec("sh " + stop + " python", function (error, stdout, stderr) {
 function pinMode(pin, mode) {
 	try {
 		//verify socket connection, recursive way
-		
-		if(typeof(socket) == 'undefined'){
-			setTimeout(function(){
-					pinMode(pin, mode);
-				}, 50);
-			return;
-		}
-		if( checkPinMode(pin, mode) ){
-			//var mpin = getPin(layout,pin,'digital',mode);
-			//when check connection is ok, emit the request
-			var cmd = JSON.stringify({command:[{cmd: 'mode', pin: pin, mode: mode}]});
-			socket.write(cmd,'utf8',function(){
-				pinReg[pin] = mode;
-				console.log(JSON.stringify(pinReg));
-			});
-			
-		}
-		else{
-			throw new Error("Can not call pinMode for Pin " + pin + "!");
-		}
+		setTimeout(function(){
+			if(typeof(socket) == 'undefined'){
+				setTimeout(function(){
+						pinMode(pin, mode);
+					}, MODE_RETRY_SPEED);
+				return;
+			}
+			if( checkPinMode(pin, mode) ){
+				//var mpin = getPin(layout,pin,'digital',mode);
+				//when check connection is ok, emit the request
+				var cmd = JSON.stringify({command:[{cmd: 'mode', pin: pin, mode: mode}]});
+				socket.write(cmd,ENCODING,function(){
+					pinReg[pin] = mode;
+					console.log(JSON.stringify(pinReg));
+				});
+				
+			}
+			else{
+				throw new Error("Can not call pinMode for Pin " + pin + "!");
+			}
+		}, MODE_RETRY_SPEED);	
 	}
 	catch(err){
 		console.log(err);
@@ -107,8 +123,9 @@ function digitalWrite(pin, value) {
 			if(checkDigitalWrite(pin)){
 				//var mpin = getPin(layout,pin,'digital','');
 				//when check connection is ok, emit the request
-				var cmd = JSON.stringify({command:[{cmd: 'write', pin: pin, value: value}]});
-				socket.write(cmd,'utf8'); //when connection is ok, emit the request 
+				var cmd = JSON.stringify({ command:[ {cmd: 'write', pin: pin, value: value } ]});
+				//socket.write(cmd,ENCODING); //when connection is ok, emit the request 
+				pushWriteRequest(cmd);
 			}
 			else{
 				throw new Error("Can not call digitalWrite for Pin " + pin + "!");
@@ -124,8 +141,13 @@ function analogWrite(pin, value) {
 		if(typeof(socket) != 'undefined' ){
 			if(checkAnalogWrite(pin)){
 				//var mpin = getPin(layout,pin,'analog','');
-				var cmd = JSON.stringify({command:[{cmd: 'write', pin: pin, value: value}]});
-				socket.write(cmd,'utf8'); //when connection is ok, emit the request
+				
+				if(value>=1024) value = 1024;
+				if(value<=0) value = 0;
+				value = Math.round(value/1024 * 10000) / 10000; //trunc 4 decimal digits
+				var cmd = JSON.stringify({ command:[ {cmd: 'write', pin: pin, value: value } ]});
+				//socket.write(cmd,ENCODING); //when connection is ok, emit the request
+				pushWriteRequest(cmd);
 			}
 			else{
 				throw new Error("Can not call analogWrite for Pin " + pin + "!");
@@ -138,21 +160,23 @@ function analogWrite(pin, value) {
 }
 function digitalRead(pin, callback) {
 	try {
-		//verify socket connection, recursive way
-		if(typeof(socket) == 'undefined' ){
-			setTimeout(function(){
-				digitalRead(pin,callback);
-			}, 500);
-			return;
-		}
-		if(checkDigitalRead(pin)){
-			//var mpin = getPin(layout,pin,'digital','');
-			var cmd = JSON.stringify({command:[{cmd: 'read', pin: pin}]});
-			socket.write(cmd,'utf8',readback(pin, callback)); //when connection is ok, emit the request
-		}
-		else{
-			throw new Error("Can not call digitalRead for Pin " + pin + "!");
-		}
+		setTimeout(function(){
+			//verify socket connection, recursive way
+			if(typeof(socket) == 'undefined' ){
+				setTimeout(function(){
+					digitalRead(pin,callback);
+				}, READ_RETRY_SPEED/2);
+				return;
+			}
+			if(checkDigitalRead(pin)){
+				//var mpin = getPin(layout,pin,'digital','');
+				var cmd = JSON.stringify({command:[{cmd: 'read', pin: pin}]});
+				socket.write(cmd,ENCODING,readback(pin, callback)); //when connection is ok, emit the request
+			}
+			else{
+				throw new Error("Can not call digitalRead for Pin " + pin + "!");
+			}
+		}, READ_RETRY_SPEED/2);	
 	}
 	catch(err){
 		console.log(err);
@@ -160,21 +184,23 @@ function digitalRead(pin, callback) {
 }
 function analogRead(pin, callback) {
     try {
+		setTimeout(function(){
 		//verify socket connection, recursive way
-		if(typeof(socket) == 'undefined' ){
-			setTimeout(function(){
+			if(typeof(socket) == 'undefined' ){
+				setTimeout(function(){
 					analogRead(pin,callback);
-				}, 500);
-			return;
-		}
-		if(checkAnalogRead(pin)){
-			//var mpin = getPin(layout,pin,'analog','');
-			var cmd = JSON.stringify({command:[{cmd: 'read', pin: pin}]});
-			socket.write(cmd,'utf8',readback(pin, callback)); //when connection is ok, emit the request
-		}
-		else{
-			throw new Error("Can not call analogRead for Pin " + pin + "!");
-		}
+				}, READ_RETRY_SPEED/2);
+				return;
+			}
+			if(checkAnalogRead(pin)){
+				//var mpin = getPin(layout,pin,'analog','');
+				var cmd = JSON.stringify({command:[{cmd: 'read', pin: pin}]});
+				socket.write(cmd,'utf8',readback(pin, callback)); //when connection is ok, emit the request
+			}
+			else{
+				throw new Error("Can not call analogRead for Pin " + pin + "!");
+			}
+		}, READ_RETRY_SPEED/2);
 	}
 	catch(err){
 		console.log(err);
@@ -186,7 +212,8 @@ function servoWrite(pin, angle){
 			if(checkServoWrite(pin)){
 				//var mpin = getPin(layout,pin,'digital',utils.MODES.servo);
 				var cmd = JSON.stringify({command:[{cmd: 'write', pin: pin, value: angle}]});
-				socket.write(cmd,'utf8'); //when connection is ok, emit the request
+				//socket.write(cmd,'utf8'); //when connection is ok, emit the request
+				pushWriteRequest(cmd);
 			}
 			else{
 				throw new Error("Can not call servoWrite for Pin " + pin + "!");
@@ -203,10 +230,15 @@ function servoWrite(pin, angle){
 ***/
 function eventEmit(data){
 	if(	typeof(data) != 'undefined'){
-		datajson = JSON.parse(data);
-		if( typeof(datajson.cmd) != 'undefined' && 
-			datajson.cmd == 'read-back'){
-			event.emit('read-back-'+datajson.pin, data);
+		try{
+			datajson = JSON.parse(data);
+			if( typeof(datajson.cmd) != 'undefined' && 
+				datajson.cmd == 'read-back'){
+				event.emit('read-back-'+datajson.pin, data);
+			}
+		}
+		catch(err){
+			console.log(err);
 		}
 	}
 }
@@ -268,7 +300,7 @@ function getPin(boardlayout, pinnumber, ad ,requestmode){
 /***
 * Check functions
 ***/
-function checkPinMode(pinnumber,mode){
+function checkPinMode(pinnumber,mode){console.log(mode);
 	if(	typeof(pinnumber) != 'undefined'&& 
 		pinnumber.startsWith('D') 		&& 
 		typeof(mode) != 'undefined' 	&& 
@@ -322,7 +354,7 @@ function checkAnalogWrite(pinnumber){
 		return false
 	}
 }
-function checkAnalogRead(pinnumber){	
+function checkAnalogRead(pinnumber){
 	if(	typeof(pinnumber) != 'undefined' && 
 		pinnumber.startsWith('A') ){//&& 
 		//typeof(pinReg[pinnumber]) != 'undefined' && 
@@ -365,6 +397,23 @@ String.prototype.startsWith = function (str){
 }
 String.prototype.endsWith = function (str){
 	return this.slice(-str.length) == str;
+}
+
+/***
+* System Functions
+***/
+//push write command for bridge inside a buffer
+function pushWriteRequest(cmd){
+	if(writeBuffer.length < BUFFER_SIZE){
+		writeBuffer.push(cmd);
+	}
+}
+
+//get the command from the buffer and send it to the bridge
+function sendWriteRequest(){
+	if(typeof(socket) != 'undefined' && writeBuffer.length > 0){
+		socket.write(writeBuffer.shift(), ENCODING);
+	}
 }
 
 /***
