@@ -5,14 +5,20 @@ function connection(host)
 {
 	var url = 'http://' + host + ':' + port;
 	socket = io.connect(url,{ rememberTransport: false, transports: ['xhr-polling']});
-	
-	socket.on('connection', function(socket){
-		var address = socket.handshake.address;
-		alert("Connected with " + address.address);
-		socket.on('disconnect', function(){
-			alert("Disconnect from " + address.address + ":" + address.port);
-		});
+
+
+	socket.on('connect', function(socket){
+		//var address = socket.handshake.address;
+		//alert("Connected with " + address.address);
+		alert('connect');
+
 	});
+	socket.on('disconnect', function(){
+		//alert("Disconnect from " + address.address + ":" + address.port);
+		alert('disconnect');
+		//socket.socket.reconnect();
+	});
+	
 	socket.on('command', function(msg){
 		Object.keys(msg.command).forEach(function(key) {
 			var command = msg.command[key];

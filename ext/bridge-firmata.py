@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-import json, pyfirmata, thread, time, socket, logging,os
+import json, pyfirmata, thread, time, socket, logging, logging.handlers ,argparse, os
 from pyfirmata import Arduino, util
 import logging.handlers
 
@@ -13,12 +13,9 @@ dirname, filename = os.path.split(os.path.abspath(__file__))
 arduino_serial_port = '/dev/ttySPI0'
 arduino_serial_brate = 57600                    
 
-arduino = Arduino(arduino_serial_port,baudrate=arduino_serial_brate)
-iterator = util.Iterator(arduino)
-iterator.start()
-
 #====variabile e strutture dati====================
 logger_file=dirname+'/bridge-firmata.log'
+layout_path='/opt/ideino-linino/node_modules/ideino-linino-lib/utils/layout.json'
 host=''
 sock=[None]
 port= 9810                     #1557
@@ -27,7 +24,11 @@ hash_getpin_d={}                                                                
 hash_tx={'A0':-1,'A1':-1,'A2':-1,'A3':-1,'A4':-1,'A5':-1,'D2':-1,'D3':-1,'D4':-1,'D5':-1,'D6':-1,'D7':-1,'D8':-1,'D9':-1,'D10':-1,'D11':-1,'D12':-1,'D13':-1}
 read_pin=[]                                                     #pin emit
 
-
+def arduino():
+    arduino = Arduino(arduino_serial_port,baudrate=arduino_serial_brate)
+    iterator = util.Iterator(arduino)
+    iterator.start()
+    return arduino
         
 def excute_command (command):
 
@@ -181,7 +182,6 @@ def handle(conn, addr):       #handle websocket
                 data=data.split('-')
                 for i in data:
                     excute_command(i)
-                    logger.debug('data received: '+i)
             else:
                 excute_command(data)
         except :
@@ -192,17 +192,54 @@ def handle(conn, addr):       #handle websocket
     conn.close()
 
 
+def arg_par():
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                description='Show the use of options in Python')
+    parser.add_argument('-log', type=str, help=" set the log level [i=info, e=error, w=warning, d=debug] (default: %(default)s)", nargs='?',default='i')
+    parser.add_argument('-handle', type=str, help='set the log mode [f=file, c=console, a=all] (default: %(default)s)', nargs='?', default='f')
+    parser.add_argument('-layout', type=str, help='set the board layout [y=yun, m=mega, r=raspberry](default: %(default)s)', nargs='?', default='y')
+    args = parser.parse_args()
+    l = args.log
+    hl = args.handle
+    ly = args.layout
+    return l,hl,ly
+    
 if __name__ == "__main__":
 
-    
+    layout_file=open(layout_path)               #upload board layout
+    file_data=layout_file.read()
+    layout_file.close()
+    layout=json.loads(file_data)
+
+    l,hl,ly= arg_par()
+
+    arduino=arduino()
     
     logger = logging.getLogger('bridge-firmata')
-    hdlr_file = logging.handlers.RotatingFileHandler(logger_file, maxBytes=100000, backupCount=3)
     formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+    hdlr_file = logging.handlers.RotatingFileHandler(logger_file, maxBytes=100000, backupCount=3)   #logger file (backupCount= log file number, maxBytes=log file size)
+    hdlr_console= logging.StreamHandler()
     hdlr_file.setFormatter(formatter)
-    logger.addHandler(hdlr_file)                #file debug
-    logger.setLevel(logging.INFO)              #WARNING,INFO,ERROR
+    hdlr_console.setFormatter(formatter)
+    if 'w' in l:
+        level=logging.WARNING
+    if 'i' in l:
+        level=logging.INFO
+    if 'e' in l:
+        level=logging.ERROR
+    if 'd' in l:
+        level=logging.DEBUG
+    if 'f' in hl:
+        logger.addHandler(hdlr_file)
+    if 'a' in hl:
+        logger.addHandler(hdlr_file)
+        logger.addHandler(hdlr_console)
+    if 'c' in hl:
+        logger.addHandler(hdlr_console)
+    if 'y' in ly:
+        board='arduino_yun'
 
+    logger.setLevel(level)              #WARNING,INFO,ERROR
     
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)     
@@ -213,8 +250,8 @@ if __name__ == "__main__":
     s.listen(5)
 
     try:
-        thread.start_new_thread( polling, ("Thread-1", 0.05))
-        logger.info('Polling thread started')
+        thread.start_new_thread( polling, ("Thread-1", 0.025))
+        logger.debug('Polling thread started')
     except:
         logger.error('unable to start polling thread')
 

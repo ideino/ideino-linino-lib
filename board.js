@@ -1,7 +1,9 @@
 //Board
 var bridgefile = 'bridge-firmata.py',
 	bridgestop = 'bridge-stop',
-	debug = false;
+	bridge_loglevel = 'd',		//d = debug, i = info, w = warning, e = error
+	bridge_loghandle = 'f',		//f = file, c = console, a = all (file + console)
+	bridge_layout = 'y';		//y = arduino_yun
 	
 var	net = require('net'), 
 	layout = require('./utils/layout').arduino_yun, //layout = require('./utils/layout')['arduino_yun'];
@@ -16,14 +18,13 @@ var	net = require('net'),
 //CONST	
 var	BUFFER_SIZE = 1000,			//items -> is the size of the buffer containing the write commands
 	BUFFER_SPEED = 25,			//millis -> is the speed for sending requests from the buffer to the board
-	READ_RETRY_SPEED = 1800,		//millis -> is the speed for retry to send the read command
+	READ_RETRY_SPEED = 1800,	//millis -> is the speed for retry to send the read command
 	MODE_RETRY_SPEED = 50,		//millis -> is the speed for retry to send the pin mode command
 	WAIT_BRIDGE_TIME = 10000,
 	ENCODING = 'utf8'
 	SERVER = '127.0.0.1',
 	PORT = 9810;
 	
-
 var bridge = path.join(__dirname,'ext',bridgefile),
 	stop = path.join(__dirname,'ext',bridgestop),
 	event = new EventEmitter();
@@ -31,11 +32,10 @@ var bridge = path.join(__dirname,'ext',bridgefile),
 var spawn = require('child_process').spawn,
 
 exec = require('child_process').exec;
-
-exec("sh " + stop + " python", function (error, stdout, stderr) {
-	proc  = spawn('python',[bridge]);
+exec("sh " + stop + " " + bridge, function (error, stdout, stderr) {
+	proc  = spawn('python',[bridge,"-log","d","-handle","f","-layout","y"]);
 	
-	if(debug){
+	if(bridge_loglevel == 'd' ){
 		proc.stdout.on('data', function (data) {
 		  console.log('stdout: ' + data);
 		});
@@ -60,7 +60,15 @@ exec("sh " + stop + " python", function (error, stdout, stderr) {
 		});
 		socket.on('data', function(data) {
 			//console.log(data.toString());	//message from server
-			eventEmit(data);
+			if ( data.search('}{') == -1){
+				eventEmit(data);
+			}
+			else{
+				data=data.replace(/}{/g,'}~{').split('~');
+				data.forEach(function(cmditem) {
+					eventEmit(cmditem);
+				});
+			}
 		});
 		socket.on('error', function (e) {
 			//throw new Error("Bridge Connection Failure ["+e.code+"]");
