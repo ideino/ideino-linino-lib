@@ -1,16 +1,28 @@
+/***
+ * file: board.js
+ * version: 0.1.0
+ * author: sergio tomasello - https://github.com/quasto
+ * license: mit
+ ***/
+
 //Board
+var default_board_layout = "arduino_yun";	//TODO get from constructor or config file
+
 var bridgefile = 'bridge-firmata.py',
 	bridgestop = 'bridge-stop',
+	//default values for bridge;
 	bridge_loglevel = 'd',		//d = debug, i = info, w = warning, e = error
 	bridge_loghandle = 'f',		//f = file, c = console, a = all (file + console)
 	bridge_layout = 'y';		//y = arduino_yun
 	
 var	net = require('net'), 
-	layout = require('./utils/layout').arduino_yun, //layout = require('./utils/layout')['arduino_yun'];
+	layouts = require('./utils/layout'),
+	layout = layouts[default_board_layout],
 	utils = require('./utils/utils'),
 	path = require('path'),
 	EventEmitter = require('events').EventEmitter,
 	socket,
+	logger,
 	pinReg = {},		//list for storing the mode of every used pin of the board
 	writeBuffer = [];	//buffer for managing the write request sent to the board
 	
@@ -18,10 +30,8 @@ var	net = require('net'),
 //CONST	
 var	BUFFER_SIZE = 1000,			//items -> is the size of the buffer containing the write commands
 	BUFFER_SPEED = 25,			//millis -> is the speed for sending requests from the buffer to the board
-	READ_RETRY_SPEED = 1800,	//millis -> is the speed for retry to send the read command
-	MODE_RETRY_SPEED = 50,		//millis -> is the speed for retry to send the pin mode command
-	WAIT_BRIDGE_TIME = 10000,
-	ENCODING = 'utf8'
+	WAIT_BRIDGE_TIME = 12000,	//millis -> is the time before start the bridge
+	ENCODING = 'utf8',
 	SERVER = '127.0.0.1',
 	PORT = 9810;
 	
@@ -30,207 +40,253 @@ var bridge = path.join(__dirname,'ext',bridgefile),
 	event = new EventEmitter();
 
 var spawn = require('child_process').spawn,
+	exec = require('child_process').exec;
 
-exec = require('child_process').exec;
-exec("sh " + stop + " " + bridge, function (error, stdout, stderr) {
-	proc  = spawn('python',[bridge,"-log","d","-handle","f","-layout","y"]);
+var CHECK_MSG = {	PIN_UNDEFINED : 	"The specified pin is undefined!",
+					PIN_NOT_DIGITAL: 	"The specified pin [{0}] is not a Digital pin",
+					PIN_NOT_ANALOG: 	"The specified pin [{0}] is not an Analog pin",
+					PIN_NOT_VIRTUAL: 	"The specified pin [{0}] is not a Virtual pin",
+					PIN_NOT_LAYOUT:		"The specified pin [{0}] is not defined in the board layout!",
+					PIN_NOT_DEFINED:	"The specified pin [{0}] is not already defined! You must first, call pinMode!",
+					MODE_NOT_VALID: 	"The specified mode [{0}] for pin [{1}] is not valid.",
+					MODE_UNDEFINED : 	"The specified mode for pin [{0}] is undefined!"
+				}
+				
+function connect( loglevel, callback ){
 	
-	if(bridge_loglevel == 'd' ){
-		proc.stdout.on('data', function (data) {
-		  console.log('stdout: ' + data);
-		});
+	/*** parameters managament ***/
+	//thanks to klovadis: https://gist.github.com/klovadis/2549131
+	
+	// retrieve arguments as array
+    var args = [];
+    for (var i = 0; i < arguments.length; i++) {
+        args.push(arguments[i]);
+    }
+	
+	callback = args.pop();
+	
+	//check loglevel parameters
+	if (args.length > 0) loglevel = args.shift(); else loglevel = 'error';
+    //check for future optional parameters
+	//if (args.length > 0) optional = args.shift(); else optional = null;
+	
+	
 
-		proc.stderr.on('data', function (data) {
-		  console.log('stderr: ' + data);
-		});
+	exec("sh " + stop + " " + bridgefile, function (error, stdout, stderr) {
+		proc  = spawn('python',[bridge,"-log","w","-handle",bridge_loghandle,"-layout",bridge_layout]);
+		
+		if(bridge_loglevel == 'd' ){
+			proc.stdout.on('data', function (data) {
+			  logger.debug('BRIDGE STDOUT: ' + data);
+			});
 
-		proc.on('close', function (code) {
-		  console.log('child process exited with code ' + code);
-		});
-	}
-	setTimeout(function(){
-		socket = net.connect({port:PORT, host:SERVER},function() {
-			socket.setEncoding(ENCODING);
-			console.log("Bridge Connection Success");
-			//sending event from buffer
-			setInterval(function(){
-				sendWriteRequest();
-			},BUFFER_SPEED);
-			
-		});
-		socket.on('data', function(data) {
-			//console.log(data.toString());	//message from server
-			if ( data.search('}{') == -1){
-				eventEmit(data);
-			}
-			else{
-				data=data.replace(/}{/g,'}~{').split('~');
-				data.forEach(function(cmditem) {
-					eventEmit(cmditem);
+			proc.stderr.on('data', function (data) {
+			  logger.error('BRIDGE STDERR: ' + data);
+			});
+
+			proc.on('close', function (code) {
+			  logger.debug('child process exited with code ' + code);
+			});
+		}
+		
+		logger.info("Connecting to the Board...");
+		setTimeout(function(){
+			socket = net.connect({port:PORT, host:SERVER},function() {
+				socket.setEncoding(ENCODING);
+				logger.info("Board Connection Success");
+				
+				//sending event from buffer
+				setInterval(function(){
+					sendWriteRequest();
+				},BUFFER_SPEED);
+				callback(true);
+			});
+			socket.on('data', function(data) {
+				//console.log(data.toString());	//message from server
+				if ( data.search('}{') == -1){
+					eventEmit(data);
+				}
+				else{
+					data=data.replace(/}{/g,'}~{').split('~');
+					data.forEach(function(cmditem) {
+						eventEmit(cmditem);
+					});
+				}
+			});
+			socket.on('error', function (e) {
+				//throw new Error("Board Connection Failure ["+e.code+"]");
+				/*
+				if (e.code == 'EADDRINUSE') {
+					//console.log('Address in use, retrying...');
+					//TODO: TROHW ERROR
+				}
+				*/
+				logger.error("Board Connection Failure ["+e.code+"]");
+				exec("sh " + stop + " " + bridgefile, function (error, stdout, stderr) {
+					process.exit(1);
 				});
-			}
-		});
-		socket.on('error', function (e) {
-			//throw new Error("Bridge Connection Failure ["+e.code+"]");
-			/*
-			if (e.code == 'EADDRINUSE') {
-				//console.log('Address in use, retrying...');
-				//TODO: TROHW ERROR
-			}
-			*/
-			console.log("Bridge Connection Failure ["+e.code+"]");
-			process.exit(1);
-		});
-			
-	},WAIT_BRIDGE_TIME);
-	
-	
-});
+			});
+				
+		},WAIT_BRIDGE_TIME);
+		
+		
+	});
+}
 
 /***
 * Board functions
 ***/
 function pinMode(pin, mode) {
 	try {
-		//verify socket connection, recursive way
-		setTimeout(function(){
-			if(typeof(socket) == 'undefined'){
-				setTimeout(function(){
-						pinMode(pin, mode);
-					}, MODE_RETRY_SPEED);
-				return;
+		checkPinMode(pin,mode,function(err){
+			if(err){
+				throw err;
 			}
-			if( checkPinMode(pin, mode) ){
-				//var mpin = getPin(layout,pin,'digital',mode);
-				//when check connection is ok, emit the request
-				var cmd = JSON.stringify({command:[{cmd: 'mode', pin: pin, mode: mode}]});
+			else{
+				var cmd = JSON.stringify({command:[{cmd: 'mode', pin: pin, mode: mode.toLowerCase()}]});
 				socket.write(cmd,ENCODING,function(){
 					pinReg[pin] = mode;
-					console.log(JSON.stringify(pinReg));
+					logger.debug("pin " + pin + " is set to " + mode + " mode.");
 				});
-				
 			}
-			else{
-				throw new Error("Can not call pinMode for Pin " + pin + "!");
-			}
-		}, MODE_RETRY_SPEED);	
+		});
 	}
 	catch(err){
-		console.log(err);
+		logger.error("BOARD PIN MODE ERROR - " + err.message);
+		exec("sh " + stop + " " + bridgefile, function (error, stdout, stderr) {
+			process.exit(1);
+		});		
 	}
-};
+}
 function digitalWrite(pin, value) {
     try {
-		if(typeof(socket) != 'undefined' ){
-		/*if(typeof(socket) == 'undefined'){
-			setTimeout(function(){
-					digitalWrite(pin, value);
-				}, 50);
-			return;
-		}*/
-			if(checkDigitalWrite(pin)){
-				//var mpin = getPin(layout,pin,'digital','');
-				//when check connection is ok, emit the request
-				var cmd = JSON.stringify({ command:[ {cmd: 'write', pin: pin, value: value } ]});
-				//socket.write(cmd,ENCODING); //when connection is ok, emit the request 
-				pushWriteRequest(cmd);
-			}
-			else{
-				throw new Error("Can not call digitalWrite for Pin " + pin + "!");
-			}
-		}		
+		process.nextTick(function(){
+			checkDigitalWrite(pin, function(err){
+				if(err){
+					logger.error(err.message);
+				}else{
+					var cmd = JSON.stringify({ command:[ {cmd: 'write', pin: pin, value: value } ]});
+					pushWriteRequest(cmd);
+				}
+			});		
+		});
 	}
 	catch(err){
-		console.log(err);
+		logger.error("BOARD DIGITAL WRITE ERROR - " + err.message);
 	}
 }
 function analogWrite(pin, value) {
     try {
-		if(typeof(socket) != 'undefined' ){
-			if(checkAnalogWrite(pin)){
-				//var mpin = getPin(layout,pin,'analog','');
-				
-				if(value>=1024) value = 1024;
-				if(value<=0) value = 0;
-				value = Math.round(value/1024 * 10000) / 10000; //trunc 4 decimal digits
-				var cmd = JSON.stringify({ command:[ {cmd: 'write', pin: pin, value: value } ]});
-				//socket.write(cmd,ENCODING); //when connection is ok, emit the request
-				pushWriteRequest(cmd);
-			}
-			else{
-				throw new Error("Can not call analogWrite for Pin " + pin + "!");
-			}
-		}
+		process.nextTick(function(){
+			checkAnalogWrite(pin, function(err){
+				if(err){
+					logger.error(err.message);
+				}else{
+					if(value>=1024) value = 1024;
+					if(value<=0) value = 0;
+					value = Math.round(value/1024 * 10000) / 10000; //trunc 4 decimal digits
+					var cmd = JSON.stringify({ command:[ {cmd: 'write', pin: pin, value: value } ]});
+					//socket.write(cmd,ENCODING); //when connection is ok, emit the request
+					pushWriteRequest(cmd);
+				}
+			});
+		});
 	}
 	catch(err){
-		console.log(err);
+		logger.error("BOARD ANALOG WRITE ERROR - " + err.message);
 	}
 }
 function digitalRead(pin, callback) {
 	try {
-		setTimeout(function(){
-			//verify socket connection, recursive way
-			if(typeof(socket) == 'undefined' ){
-				setTimeout(function(){
-					digitalRead(pin,callback);
-				}, READ_RETRY_SPEED/2);
-				return;
-			}
-			if(checkDigitalRead(pin)){
-				//var mpin = getPin(layout,pin,'digital','');
-				var cmd = JSON.stringify({command:[{cmd: 'read', pin: pin}]});
-				socket.write(cmd,ENCODING,readback(pin, callback)); //when connection is ok, emit the request
-			}
-			else{
-				throw new Error("Can not call digitalRead for Pin " + pin + "!");
-			}
-		}, READ_RETRY_SPEED/2);	
+		process.nextTick(function(){
+			checkDigitalRead(pin,function(err){
+				if(err){
+					logger.error(err.message);
+				}
+				else{
+					var cmd = JSON.stringify({command:[{cmd: 'read', pin: pin}]});
+					socket.write(cmd,ENCODING,readback(pin, callback)); //when connection is ok, emit the request
+				}
+			});
+		});
 	}
 	catch(err){
-		console.log(err);
+		logger.error("BOARD DIGITAL READ ERROR - " + err.message);
 	}  
 }
 function analogRead(pin, callback) {
     try {
-		setTimeout(function(){
-		//verify socket connection, recursive way
-			if(typeof(socket) == 'undefined' ){
-				setTimeout(function(){
-					analogRead(pin,callback);
-				}, READ_RETRY_SPEED/2);
-				return;
-			}
-			if(checkAnalogRead(pin)){
-				//var mpin = getPin(layout,pin,'analog','');
-				var cmd = JSON.stringify({command:[{cmd: 'read', pin: pin}]});
-				socket.write(cmd,'utf8',readback(pin, callback)); //when connection is ok, emit the request
-			}
-			else{
-				throw new Error("Can not call analogRead for Pin " + pin + "!");
-			}
-		}, READ_RETRY_SPEED/2);
+		process.nextTick(function(){
+			checkAnalogRead(pin,function(err){
+				if(err){
+					logger.error(err.message);
+				}
+				else{
+					var cmd = JSON.stringify({command:[{cmd: 'read', pin: pin}]});
+					socket.write(cmd,'utf8',readback(pin, callback)); //when connection is ok, emit the request
+				}
+			});
+		});
 	}
 	catch(err){
-		console.log(err);
+		logger.error("BOARD ANALOG READ ERROR - " + err.message);
 	}
 }
 function servoWrite(pin, angle){
     try {
-		if(typeof(socket) != 'undefined' ){
-			if(checkServoWrite(pin)){
-				//var mpin = getPin(layout,pin,'digital',utils.MODES.servo);
-				var cmd = JSON.stringify({command:[{cmd: 'write', pin: pin, value: angle}]});
-				//socket.write(cmd,'utf8'); //when connection is ok, emit the request
-				pushWriteRequest(cmd);
-			}
-			else{
-				throw new Error("Can not call servoWrite for Pin " + pin + "!");
-			}
-		}
+		process.nextTick(function(){
+			checkServoWrite(pin,function(err){
+				if(err){
+					logger.error(err.message);
+				}
+				else{
+					var cmd = JSON.stringify({command:[{cmd: 'write', pin: pin, value: angle}]});
+					//socket.write(cmd,'utf8'); //when connection is ok, emit the request
+					pushWriteRequest(cmd);
+				}
+			});
+		});
 	}
 	catch(err){
-		console.log(err);
+		logger.error("BOARD SERVO WRITE ERROR - " + err.message);
 	}
+}
+
+/***
+* Virtual Board functions
+***/ 
+function virtualWrite(virtualpin, value){
+	try {
+		checkVirtualWrite(pin,function(err){
+			if(err){
+				logger.error(err.message);
+			}
+			else{
+				var cmd = JSON.stringify({ command:[ {cmd: 'virtualwrite', pin: virtualpin, value: value } ]});
+				pushWriteRequest(cmd);
+			}
+		});
+				
+	}
+	catch(err){
+		logger.error(err);
+	}
+}
+function virtualRead(virtualpin, calback){
+	try {
+		checkVirtualRead(pin,function(err){
+			if(err){
+				logger.error(err.message);
+			}
+			else{
+				var cmd = JSON.stringify({command:[{cmd: 'vread', pin: virtualpin}]});
+				socket.write(cmd,ENCODING,readback(pin, callback)); //when connection is ok, emit the request
+			}
+		});
+	}
+	catch(err){
+		logger.error(err.message);
+	} 
 }
 
 /***
@@ -246,7 +302,7 @@ function eventEmit(data){
 			}
 		}
 		catch(err){
-			console.log(err);
+			logger.error("BOARD EVENT EMIT ERROR - " + err.message);
 		}
 	}
 }
@@ -257,159 +313,170 @@ function readback(mpin, callback){
 		});
 	}
 }
-/*
-function getPin(boardlayout, pinnumber, ad ,requestmode){
-	if(typeof(boardlayout) != 'undefined' && typeof(pinnumber) != 'undefined'){
-		//check if pin is disabled
-		if( !boardlayout.disabled.contains(pinnumber) ){
-			//check if mode is analog
-			if(ad == 'analog'){
-				if(boardlayout.analog.contains(pinnumber) ){
-					return 'A'+pinnumber;
-				}else{
-					throw new Error("Pin " + pinnumber + " is not an analog pin!");
-				}
-			
-			//else its digital
-			}else{
-				if(boardlayout.digital.contains(pinnumber) ){
-					if(requestmode == 'pwm'){
-						if(boardlayout.pwm.contains(pinnumber) ){
-							return 'D'+pinnumber+'P';
-						}else{
-							throw new Error("Pin " + pinnumber + " is not a pwm pin!");
-						}
-					}else{
-						if(requestmode == 'servo'){
-							if(boardlayout.digital.contains(pinnumber) ){
-								return 'D'+pinnumber+'S';
-							}else{
-								throw new Error("Pin " + pinnumber + " is not a servo pin!");
-							}
-						}else{
-							return 'D'+pinnumber;
-						}
-					}
-				}else{
-					throw new Error("Pin " + pinnumber + " is not a digital pin!");
-				}
-			}
-			
-		}else{
-			throw new Error("Pin " + pinnumber + " is disabled!");
-		}
-		
-	}else{
-		throw new Error("Undefined board type or pin number!");
-	}
-}
-*/
 
 /***
 * Check functions
 ***/
-function checkPinMode(pinnumber,mode){console.log(mode);
-	if(	typeof(pinnumber) != 'undefined'&& 
-		pinnumber.startsWith('D') 		&& 
-		typeof(mode) != 'undefined' 	&& 
-			(	mode == utils.MODES.OUTPUT	|| 
-				mode == utils.MODES.INPUT 	||
-				mode == utils.MODES.PWM 	|| 
-				mode == utils.MODES.SERVO	) ){
-		
-		return true;
+function checkPinMode(pinnumber,mode, callback){
+	if( typeof(pinnumber) == 'undefined'){
+		callback( new Error(CHECK_MSG.PIN_UNDEFINED) );return false;
 	}
-	else{
-		return false
+	if( !pinnumber.toLowerCase().startsWith('d')){ 
+		callback( new Error(String.format(CHECK_MSG.PIN_NOT_DIGITAL,pinnumber)) );return false
 	}
+	if( !contains(layout.digital, pinnumber) ){
+		callback( new Error(String.format(CHECK_MSG.PIN_NOT_LAYOUT,pinnumber)) );return false;
+	}
+	if( typeof(mode) == 'undefined'){
+		callback(new Error(String.format(CHECK_MSG.MODE_UNDEFINED,pinnumber)) );return false;
+	}
+	if(	mode.toLowerCase() != utils.MODES.OUTPUT.toLowerCase()	&& 
+		mode.toLowerCase() != utils.MODES.INPUT.toLowerCase() 	&&
+		mode.toLowerCase() != utils.MODES.PWM.toLowerCase() 	&& 
+		mode.toLowerCase() != utils.MODES.SERVO.toLowerCase()	){
+		callback(new Error(String.format(CHECK_MSG.MODE_NOT_VALID, mode, pinnumber) + " Allowed modes are: "+ utils.MODES.OUTPUT +", "+ utils.MODES.INPUT + ", "+ utils.MODES.PWM + ", "+ utils.MODES.SERVO ));return false;
+	}
+	
+	callback(null);
+	return true;
 
 }
-function checkDigitalWrite(pinnumber){	
-	if(	typeof(pinnumber) != 'undefined' && 
-		pinnumber.startsWith('D') && 
-		typeof(pinReg[pinnumber]) != 'undefined'  && 
-		pinReg[pinnumber].toLowerCase() == utils.MODES.OUTPUT ){
-		
-		return true;
+function checkDigitalWrite(pinnumber, callback){	
+	if( typeof(pinnumber) == 'undefined'){
+		callback( new Error( CHECK_MSG.PIN_UNDEFINED ) );return false;
 	}
-	else{
-		return false
+	if( !pinnumber.toLowerCase().startsWith('d')){ 
+		callback( new Error( String.format(CHECK_MSG.PIN_NOT_DIGITAL, pinnumber) ) );return false;
 	}
+	if(typeof(pinReg[pinnumber]) == 'undefined'){
+		callback( new Error( String.format(CHECK_MSG.PIN_NOT_DEFINED, pinnumber) ) );return false;
+	}
+	if( !contains(layout.digital, pinnumber) ){
+		callback( new Error(String.format(CHECK_MSG.PIN_NOT_LAYOUT, pinnumber) ) );return false;
+	}
+	if(pinReg[pinnumber].toLowerCase() != utils.MODES.OUTPUT.toLowerCase() ){
+		callback(new Error( String.format(CHECK_MSG.MODE_NOT_VALID, pinReg[pinnumber].toLowerCase(), pinnumber) + " Allowed modes are: "+ utils.MODES.OUTPUT));return false;
+	}
+	
+	callback(null);
+	return true;
 }
-function checkDigitalRead(pinnumber){
-	if(	typeof(pinnumber) != 'undefined' && 
-		pinnumber.startsWith('D') && 
-		typeof(pinReg[pinnumber]) != 'undefined' && 
-			(	pinReg[pinnumber].toLowerCase() == utils.MODES.OUTPUT || 
-				pinReg[pinnumber].toLowerCase() == utils.MODES.INPUT ||
-				pinReg[pinnumber].toLowerCase() == utils.MODES.PWM) ){
-		
-		return true;
+function checkDigitalRead(pinnumber, callback){
+	if( typeof(pinnumber) == 'undefined'){
+		callback( new Error( CHECK_MSG.PIN_UNDEFINED ) );return false;
 	}
-	else{
-		return false
+	if( !pinnumber.toLowerCase().startsWith('d')){ 
+		callback( new Error( String.format(CHECK_MSG.PIN_NOT_DIGITAL, pinnumber) ) );return false;
 	}
+	if(typeof(pinReg[pinnumber]) == 'undefined'){
+		callback( new Error( String.format(CHECK_MSG.PIN_NOT_DEFINED, pinnumber) ) );return false;
+	}
+	if( !contains(layout.digital, pinnumber) ){
+		callback( new Error(String.format(CHECK_MSG.PIN_NOT_LAYOUT, pinnumber) ) );return false;
+	}
+	if(	pinReg[pinnumber].toLowerCase() != utils.MODES.OUTPUT.toLowerCase()	&& 
+		pinReg[pinnumber].toLowerCase() != utils.MODES.INPUT.toLowerCase() 	&&
+		pinReg[pinnumber].toLowerCase() != utils.MODES.PWM.toLowerCase() ){
+		callback(new Error(String.format(CHECK_MSG.MODE_NOT_VALID, pinReg[pinnumber].toLowerCase(), pinnumber) + " Allowed modes are: "+ utils.MODES.OUTPUT +", "+ utils.MODES.INPUT + ", "+ utils.MODES.PWM ));return false;
+	}
+	
+	callback(null);
+	return true;
 }
-function checkAnalogWrite(pinnumber){	
-	if(	typeof(pinnumber) != 'undefined' && 
-		pinnumber.startsWith('D') && 
-		typeof(pinReg[pinnumber]) != 'undefined' && 
-		pinReg[pinnumber].toLowerCase() == utils.MODES.PWM ){
-		
-		return true;
+function checkAnalogWrite(pinnumber,callback){	
+	if( typeof(pinnumber) == 'undefined'){
+		callback( new Error( CHECK_MSG.PIN_UNDEFINED ) );return false;
 	}
-	else{
-		return false
+	if( !pinnumber.toLowerCase().startsWith('d')){ 
+		callback( new Error( String.format(CHECK_MSG.PIN_NOT_DIGITAL, pinnumber) ) );return false;
 	}
-}
-function checkAnalogRead(pinnumber){
-	if(	typeof(pinnumber) != 'undefined' && 
-		pinnumber.startsWith('A') ){//&& 
-		//typeof(pinReg[pinnumber]) != 'undefined' && 
-		//pinReg[pinnumber].toLowerCase() == 'input' ){
-		
-		return true;
+	if(typeof(pinReg[pinnumber]) == 'undefined'){
+		callback( new Error( String.format(CHECK_MSG.PIN_NOT_DEFINED, pinnumber) ) );return false;
 	}
-	else{
-		return false
+	if( !contains(layout.pwm, pinnumber) ){
+		callback( new Error(String.format(CHECK_MSG.PIN_NOT_LAYOUT, pinnumber) ) );return false;
 	}
-}
-function checkServoWrite(pinnumber){	
-	if(	typeof(pinnumber) != 'undefined' && 
-		pinnumber.startsWith('D') &&
-		//pinnumber.endsWith('S') &&
-		typeof(pinReg[pinnumber]) != 'undefined' && 
-		pinReg[pinnumber].toLowerCase() == utils.MODES.SERVO ){
-		
-		return true;
+	if(pinReg[pinnumber].toLowerCase() != utils.MODES.PWM.toLowerCase() ){
+		callback(new Error( String.format(CHECK_MSG.MODE_NOT_VALID, pinReg[pinnumber].toLowerCase(), pinnumber) + " Allowed modes are: "+ utils.MODES.PWM));return false;
 	}
-	else{
-		return false
-	}
-}
+	
+	callback(null);
+	return true;
 
-/***
-* Prototype functions
-***/
-Array.prototype.contains = function(obj) {
-    var i = this.length;
-    while (i--) {
-        if (this[i] === obj) {
-            return true;
-        }
-    }
-    return false;
 }
-String.prototype.startsWith = function (str){
-	return this.slice(0, str.length) == str;
+function checkAnalogRead(pinnumber,callback){
+	if( typeof(pinnumber) == 'undefined'){
+		callback( new Error( CHECK_MSG.PIN_UNDEFINED ) );return false;
+	}
+	if( !pinnumber.toLowerCase().startsWith('a')){ 
+		callback( new Error( String.format( CHECK_MSG.PIN_NOT_ANALOG, pinnumber ) ) );return false;
+	}
+	/* analog pin are in input mode (default), non verifico il pin mode
+	if(typeof(pinReg[pinnumber]) == 'undefined'){
+		callback( new Error( String.format(CHECK_MSG.PIN_NOT_DEFINED, pinnumber) ) );return false;
+	}
+	*/
+	if( !contains(layout.analog, pinnumber) ){
+		callback( new Error(String.format(CHECK_MSG.PIN_NOT_LAYOUT, pinnumber) ) );return false;
+	}
+	callback(null);
+	return true;
 }
-String.prototype.endsWith = function (str){
-	return this.slice(-str.length) == str;
+function checkServoWrite(pinnumber,callback){	
+	if( typeof(pinnumber) == 'undefined'){
+		callback( new Error( CHECK_MSG.PIN_UNDEFINED ) );return false;
+	}
+	if( !pinnumber.toLowerCase().startsWith('d')){ 
+		callback( new Error( String.format( CHECK_MSG.PIN_NOT_DIGITAL, pinnumber ) ) );return false;
+	}
+	if(typeof(pinReg[pinnumber]) == 'undefined'){
+		callback( new Error( String.format(CHECK_MSG.PIN_NOT_DEFINED, pinnumber) ) );return false;
+	}
+	if( !contains(layout.servo, pinnumber) ){
+		callback( new Error(String.format(CHECK_MSG.PIN_NOT_LAYOUT, pinnumber) ) );return false;
+	}
+	if(pinReg[pinnumber].toLowerCase() != utils.MODES.SERVO.toLowerCase() ){
+		callback(new Error( String.format(CHECK_MSG.MODE_NOT_VALID, pinReg[pinnumber].toLowerCase(), pinnumber) + " Allowed modes are: "+ utils.MODES.SERVO));return false;
+	}
+	
+	callback(null);
+	return true;
+}
+function checkVirtualWrite(pinnumber, callback){	
+	if( typeof(pinnumber) == 'undefined'){
+		callback( new Error( CHECK_MSG.PIN_UNDEFINED ) );return false;
+	}
+	if( !pinnumber.toLowerCase().startsWith('v')){ 
+		callback( new Error( String.format( CHECK_MSG.PIN_NOT_VIRTUAL, pinnumber ) ) );return false;
+	}
+	callback(null);
+	return true;
+}
+function checkVirtualRead(pinnumber){	
+	if( typeof(pinnumber) == 'undefined'){
+		callback( new Error( CHECK_MSG.PIN_UNDEFINED ) );return false;
+	}
+	if( !pinnumber.toLowerCase().startsWith('v')){ 
+		callback( new Error( String.format( CHECK_MSG.PIN_NOT_VIRTUAL, pinnumber ) ) );return false;
+	}
+	callback(null);
+	return true;
 }
 
 /***
 * System Functions
 ***/
+function setLogger(l){
+	logger = l;
+}
+function setConfig(c){
+	config = c;
+	//TODO: manca la gestione del layout al momento è fisso arduino_yun
+	bridge_loglevel = config.logger.level[0];	'd',	//d = debug, i = info, w = warning, e = error
+	bridge_loghandle = config.logger.handler[0];		//f = file, c = console, a = all (file + console)
+	bridge_layout = 'y';								//y = arduino_yun
+}
+
 //push write command for bridge inside a buffer
 function pushWriteRequest(cmd){
 	if(writeBuffer.length < BUFFER_SIZE){
@@ -424,9 +491,23 @@ function sendWriteRequest(){
 	}
 }
 
+//verify if an object contains this value
+function contains(obj, val){
+    for(var prop in obj) {
+        if(obj.hasOwnProperty(prop) && obj[prop] === val) {
+            return true;   
+        }
+    }
+    return false;
+}
+
+
 /***
 * Exports
 ***/
+exports.connect = connect;
+exports.setLogger = setLogger;
+exports.setConfig = setConfig;
 exports.pinMode = pinMode;
 exports.digitalRead = digitalRead;
 exports.analogRead = analogRead;

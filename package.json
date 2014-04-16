@@ -2,6 +2,7 @@
 	"name" : "ideino-linino-lib",
 	"main" : "./index.js",
 	"dependencies": {
-		"socket.io": "*"
+		"socket.io": "*",
+		"winston": "0.7.3"
 	  }	
 }

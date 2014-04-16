@@ -1,6 +1,5 @@
 #!/bin/sh
-#for pid in `pidof $1`; do
-for pid in `ps www | grep $1 | grep -v grep | awk {'print $1'}`; do
-  	#echo $pid;
-	kill -9 $pid
-done
+
+#export PATH=/usr/bin:/bin:/sbin
+
+ps wwww | grep -ie $1 | grep -v grep | awk '{print $1}' | xargs kill -9 

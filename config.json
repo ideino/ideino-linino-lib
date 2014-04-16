@@ -1,0 +1,8 @@
+{ 	
+	"logger": 	{ 
+				"off":		false,
+				"level":	"info",
+				"handler":	"all"
+			},
+	"layout":	"arduino_yun"
+}
