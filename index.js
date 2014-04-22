@@ -13,9 +13,13 @@ _loggerlevels = ['debug','info','warning','error'];
 _loggerstatus = [true,false];
 
 var winston = require('winston'),
+	fs = require('fs'),
+	path = require('path'),
 	handlers = [],
 	logger;
 
+var logdir = path.join(__dirname,'logs');
+	
 if( !_loggerhandlers.contains(config.logger.handler) )
 	throw new Error("Set correctly property 'logger handler' in config file. "+_loggerhandlers);
 
@@ -25,8 +29,12 @@ if( !_loggerlevels.contains(config.logger.level) )
 if( !_loggerstatus.contains(config.logger.off) )
 	throw new Error("Set correctly property 'logger on' in config file. "+_loggerstatus);
 
+if( !fs.existsSync(logdir) ){
+	fs.mkdirSync(logdir);
+}	
+
 var file_transport = new (winston.transports.File)({ 	silent:	config.logger.off,
-														filename: __dirname+'/logs/ideino-linino-lib.log', 
+														filename: path.join(logdir,'ideino-linino-lib.log'), 
 														level: config.logger.level,
 														maxsize: 100000,
 														maxFiles: 3,
