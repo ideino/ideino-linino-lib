@@ -1,0 +1,150 @@
+{
+    "info" :{
+            "name":	"lucky",
+            "type": "shield"
+    },
+    "layout" : {
+		"digital": {
+			"BTN1":	"BTN1",
+			"BTN2":	"BTN2",
+			"JOYU":	"JOYU",
+			"JOYD":	"JOYD",
+            "JOYL": "JOYL",
+            "JOYR": "JOYR",
+            "JOYC": "JOYC",
+            "LED1": "LED1",
+            "LED2": "LED2",
+            "PIR":  "PIR",
+            "REL1": "REL1",
+            "REL2": "REL2",
+            "OLED": "OLED"
+        },
+    	"i2c": {
+	        "I2C-0": {
+	            "ACC": "ACC",
+	            "MAG": "MAG",
+	            "HUM": "HUM",
+	            "ALT": "ALT"
+	            }
+        }
+	},
+    "register": {      
+        "BTN1"	:	{
+			"DEF"	: "BTN1",
+			"TYP"	: "digital",
+			"NUM"	: "213",
+			"MAP"	: "gpio213"
+		},
+        "BTN2"	:	{
+			"DEF"	: "BTN2",
+			"TYP"	: "digital",
+			"NUM"	: "214",
+			"MAP"	: "gpio214"
+		},
+		"JOYU"	:	{
+			"DEF"	: "JOYU",
+			"TYP"	: "digital",
+			"NUM"	: "208",
+			"MAP"	: "gpio208"
+		},
+		"JOYD"	:	{
+			"DEF"	: "JOYD",
+			"TYP"	: "digital",
+			"NUM"	: "209",
+			"MAP"	: "gpio209"
+		},
+        "JOYL"	:	{
+			"DEF"	: "JOYL",
+			"TYP"	: "digital",
+			"NUM"	: "210",
+			"MAP"	: "gpio210"
+		},
+		"JOYR"	:	{
+			"DEF"	: "JOYR",
+			"TYP"	: "digital",
+			"NUM"	: "211",
+			"MAP"	: "gpio211"
+		},
+		"JOYC"	:	{
+			"DEF"	: "JOYC",
+			"TYP"	: "digital",
+			"NUM"	: "212",
+			"MAP"	: "gpio212"
+		},
+		"LED1"	:	{
+			"DEF"	: "LED1",
+			"TYP"	: "digital",
+			"NUM"	: "204",
+			"MAP"	: "gpio204"
+		},
+		"LED2"	:	{
+			"DEF"	: "LED2",
+			"TYP"	: "digital",
+			"NUM"	: "205",
+			"MAP"	: "gpio205"
+		},
+        "PIR"	:	{
+			"DEF"	: "PIR",
+			"TYP"	: "digital",
+			"NUM"	: "203",
+			"MAP"	: "gpio203"
+		},
+        "REL1"	:	{
+			"DEF"	: "REL1",
+			"TYP"	: "digital",
+			"NUM"	: "206",
+			"MAP"	: "gpio206"
+		},
+        "REL2"	:	{
+			"DEF"	: "REL2",
+			"TYP"	: "digital",
+			"NUM"	: "207",
+			"MAP"	: "gpio207"
+		},
+        "ALT"	:	{
+			"DEF"   : "ALT",
+            "DES"   : "Pressure / Altimeter - Temperature",
+            "BUS"	: "i2c-0",
+			"TYP"	: "i2c",
+			"DRV"	: "mpl3115",
+			"ADD"	: "0x60",
+            "IIO"   : null
+		},
+        "MAG"	:	{
+			"DEF"   : "MAG",
+            "DES"   : "Magnetometer",
+            "BUS"	: "i2c-0",
+			"TYP"	: "i2c",
+			"DRV"	: "mag3110",
+			"ADD"	: "0x0e",
+            "IIO"   : null
+		},
+        "HUM"	:	{
+			"DEF"   : "HUM",
+            "DES"   : "Humidity - Temperature",            
+            "BUS"	: "i2c-0",
+			"TYP"	: "i2c",
+			"DRV"	: "sht21",
+			"ADD"	: "0x40"
+		},
+        "ACC"	:	{
+			"DEF"   : "ACC",
+            "DES"   : "Accelerometer",            
+            "BUS"	: "i2c-0",
+			"TYP"	: "i2c",
+			"DRV"	: "mma8491",
+			"ADD"	: "0x55",
+            "IIO"   : null
+		},
+        "OLED"	:	{
+			"DEF"   : "OLED",
+            "DES"   : "Oled Display",            
+            "BUS"	: "i2c-0",
+			"TYP"	: "fb",
+			"DRV"	: "ssd1307fb",
+			"ADD"	: "0x3c",
+            "MAP"	: "fb0"
+		}        
+    },
+    "disabled": ["D2","D3","D9","D10","D11","D12"]
+}
