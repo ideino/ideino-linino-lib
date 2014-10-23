@@ -1,8 +1,10 @@
 { 	
 	"logger": 	{ 
-				"off":		false,
-				"level":	"info",
-				"handler":	"all"
+					"off":		false,
+					"level":	"info",
+					"handler":	"all"
 			},
-	"layout":	"arduino_yun"
+	"resolution":	15,
+	"sampling":		25,
+	"period":	10000000
 }

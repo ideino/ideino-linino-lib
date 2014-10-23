@@ -1,3 +1,4 @@
+/*
 Array.prototype.contains = function(obj) {
     var i = this.length;
     while (i--) {
@@ -7,7 +8,7 @@ Array.prototype.contains = function(obj) {
     }
     return false;
 }
-
+*/
 String.prototype.startsWith = function (str){
 	return this.slice(0, str.length) == str;
 }
@@ -22,6 +23,9 @@ String.format = function() {
     var reg = new RegExp("\\{" + i + "\\}", "gm");             
     s = s.replace(reg, arguments[i + 1]);
   }
-
   return s;
+}
+
+String.prototype.removeBreakLine = function() { 
+	return this.replace(/(\r\n|\n|\r)/gm," ");
 }
