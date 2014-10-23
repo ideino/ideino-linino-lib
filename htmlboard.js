@@ -1,52 +1,89 @@
-//HtmlBoard
+/***
+ * file: htmlboard.js
+ * version: 0.5.0
+ * authors: https://github.com/quasto
+ * license: mit
+ ***/
 
-//CONST	
+/*** import ***/ 
+var	io,// = require('socket.io').listen(PORT,{log:false}), 
+	utils = require('./utils/utils');//,
+	//layouts = require('./utils/layout');
+
+var	socket,
+	writeBuffer = [],	//buffer for managing the write request sent to the board
+	readPins = [], 		//array of pin which has called with a "read"(digital, analog or virtual) from the client (js)
+	readCtrls = [],		//array which contains the "read" called from the server
+	board,
+	layout,
+	logger;	
+
+/*** constants ***/
 var	BUFFER_SIZE = 1000,			//items -> is the size of the buffer containing the write commands
 	BUFFER_SPEED = 25,			//millis -> is the speed for sending requests from the buffer to the board
 	READ_RETRY_SPEED = 500,		//millis -> is the speed for retry to send the read command
-	PORT = 9812;
-
-var	io = require('socket.io').listen(PORT,{log:false}), 
-	utils = require('./utils/utils'),
-	socket,
-	writeBuffer = [];	//buffer for managing the write request sent to the board
-
-var board,
-	logger;
+	PORT = 9812;	
 	
-io.set('transports',['xhr-polling']);
-io.set('log level',1);
 
-io.sockets.on('connection', function (client) {
-	var address = client.handshake.address;
+module.exports = Htmlboard;
+
+/*** constructor ***/
+function Htmlboard(options, brd) {	
 	
-	socket = client;
-	logger.info("HtmlBoard Client Connect from " + address.address + ":" + address.port);
+	if(typeof(brd) != 'undefined' && brd instanceof require('./board.js') ){
 	
-	setInterval(function(){
-		sendWriteRequest();
-	},BUFFER_SPEED);
+		board = brd;
+		//load the default options from config file
+		var file_options = require('./config');
 		
-	socket.on('disconnect', function () {
-		logger.info("HtmlBoard Client Disconnect from " + address.address + ":" + address.port);
-		socket = undefined;
-	});
-	
-	socket.on('command',function(data){
-		logger.debug("Received command from HtmlBoard Client: "+JSON.stringify(data));
-		parseCommand(data);
-	});
-	
-	socket.on('info',function(data){
-		logger.debug("Received info request from HtmlBoard Client: "+JSON.stringify(data));
-		parseInfoRequest(data);
-	});
-});
+		//user can specifies overwrite options in the costructor
+		this._options = utils.mergeRecursive(file_options, options);
+		//console.log(this._options.layout)
+		layout = require('./utils/layouts/'+ this._options.layout).layout;//layouts[this._options.layout];
+		//setting the logger;
+		logger = utils.getLogger(this._options.logger);
+		
+		io = require('socket.io').listen(PORT,{log:false}), 
+		
+		io.sockets.on('connection', function (client) {
+			var address = client.handshake.address;
+			
+			if(typeof(socket) != 'undefined') 
+				socket.disconnect('last win');
+			
+			socket = client;
+			logger.info("HtmlBoard Client Connect from " + address.address + ":" + address.port);
+			
+			setInterval(function(){
+				sendWriteRequest();
+			},BUFFER_SPEED);
+
+			readCtrls.forEach(function(ctrl) {
+                //socket.emit('command', ctrl.cmd, readback(ctrl.id+"-"+ctrl.param, ctrl.callback));
+                readback(ctrl.id+"-"+ctrl.param, ctrl.callback);
+			});
+            
+			socket.on('disconnect', function () {
+				logger.info("HtmlBoard Client Disconnect from " + address.address + ":" + address.port);
+			});
+			
+			socket.on('command',function(data){
+				logger.debug("Received command from HtmlBoard Client: "+JSON.stringify(data));
+				parseCommand(data);
+			});
+			
+			socket.on('info',function(data){
+				logger.debug("Received info request from HtmlBoard Client: "+JSON.stringify(data));
+				parseInfoRequest(data);
+			});
+		});	
+	}	
+}
 
 /***
 *	Function used in node app to interact with html component
 */
-function write(id, param, value) { 
+Htmlboard.prototype.write = function(id, param, value) { 
     try {
 		if(typeof(socket) != 'undefined' ){
 			//when check connection is ok, emit the request
@@ -59,18 +96,26 @@ function write(id, param, value) {
 		logger.error("HTML BOARD WRITE ERROR - " +err.message);
 	}
 }
-function read(id, param, callback) {
+Htmlboard.prototype.read = function(id, param, callback) {
+	var that = this;
 	try {
 		//verify socket connection, recursive way
 		if(typeof(socket) == 'undefined' ){
 			setTimeout(function(){
-				read(id,param,callback);
+				that.read(id,param,callback);
 			}, READ_RETRY_SPEED);
 			return;
 		}
-		var cmd = {command:[{cmd: 'read', param: param, id: id}]}
-		socket.emit('command', cmd, readback(id, callback)); //when connection is ok, emit the request
-	}
+		
+        var ctrl = {};
+        ctrl.id = id;
+        ctrl.param = param;
+        ctrl.cmd = {command:[{cmd: 'read', param: param, id: id}]};
+        ctrl.callback = callback;
+		
+        socket.emit('command', ctrl.cmd, readback(id+'-'+param, ctrl.callback)); //when connection is ok, emit the request
+	    readCtrls.push(ctrl);
+    }
 	catch(err){
 		logger.error("HTML BOARD READ ERROR - " +err.message);
 	}  
@@ -80,72 +125,83 @@ function read(id, param, callback) {
 *	Interface to the Board
 */
 function boardDigitalRead(pin){
-	if(typeof(board) != 'undefined' ){
-		board.digitalRead(pin,function(data){
+	if(typeof(board) != 'undefined' && readPins.indexOf(pin) == -1 ){
+		board.digitalRead(pin,function(value){
 			if(typeof(socket) != 'undefined')
-				socket.emit('read-back-'+pin, {cmd: "read-back", pin: pin, value: data.value});
+				socket.emit('read-back-'+pin, {cmd: "read-back", pin: pin, value: value});
 		});
+		readPins.push(pin);
 	}
 }
 function boardAnalogRead(pin){
-	if(typeof(board) != 'undefined'){
-		board.analogRead(pin,function(data){
+	if(typeof(board) != 'undefined' && readPins.indexOf(pin) == -1 ){
+		board.analogRead(pin,function(value){
 			if(typeof(socket) != 'undefined')
-				socket.emit('read-back-'+pin, {cmd: "read-back", pin: pin, value: data.value});
+				socket.emit('read-back-'+pin, {cmd: "read-back", pin: pin, value: value});
 		});
+		readPins.push(pin);
 	}
 }
 function boardVirtualRead(pin,value){
-	if(typeof(board) != 'undefined'){
-		board.virtualRead(pin,function(data){
+	if(typeof(board) != 'undefined' && readPins.indexOf(pin) == -1 ){
+		board.virtualRead(pin,function(value){
 			if(typeof(socket) != 'undefined')
-				socket.emit('read-back-'+pin, {cmd: "read-back", pin: pin, value: data.value});
+				socket.emit('read-back-'+pin, {cmd: "read-back", pin: pin, value: value});
 		});
 	}
 }
-
 function boardDigitalWrite(pin,value){
 	if(typeof(board) != 'undefined'){
-		board.digitalWrite(pin,value);
+		board.digitalWrite(pin, parseInt(value));
 	}
 }
 function boardAnalogWrite(pin,value){
 	if(typeof(board) != 'undefined'){
-		board.analogWrite(pin,value);
+		board.analogWrite(pin, parseInt(value));
 	}
 }
 function boardPinMode(pin, mode){
 	if(typeof(board) != 'undefined'){
-		board.pinMode(pin,mode);
+		board.pinMode(pin, mode);
+	}
+}
+function boardTone(pin, frequency, duration){
+	if(typeof(board) != 'undefined'){
+		board.tone(pin,  parseFloat(frequency), parseInt(duration));
+	}
+}
+function boardNoTone(pin){
+	if(typeof(board) != 'undefined'){
+		board.noTone(pin);
+	}
+}
+function boardAnalogWritens(pin, value, period){
+	if(typeof(board) != 'undefined'){
+		board.analogWritens(pin, parseFloat(value), parseFloat(period) );
 	}
 }
 function boardServoWrite(pin,value){
 	if(typeof(board) != 'undefined'){
-		board.servoWrite(pin, value);
+		board.servoWrite(pin, parseInt(value));
 	}
 }
 function boardVirtualWrite(pin,value){
 	if(typeof(board) != 'undefined'){
-		board.virtualWrite(pin, value);
+		board.virtualWrite(pin, parseInt(value));
 	}
 }
-
+function boardBlink(duration, frequency, pin){
+	if(typeof(board) != 'undefined'){
+		board.blink(parseInt(duration),parseInt(frequency), pin );
+        
+        
+	}
+}
 function boardGetLayout(){
 	if(typeof(board) != 'undefined'){
 		if(typeof(socket) != 'undefined')
 			socket.emit('info-back-layout', {info: "layout-back", value: board.pin});
 	}
-}
-/***
-* Set Functions
-***/
-//set the board object
-function setBoard(b){
-	board = b;
-}
-//set the logger object
-function setLogger(l){
-	logger = l;
 }
 
 
@@ -179,28 +235,20 @@ function parseCommand(c){
 		break;
 		case "vw":
 			boardServoWrite(c.command[0].pin, c.command[0].value);
-		break;	
+		break;
+        case "tn":
+            boardTone(c.command[0].pin, c.command[0].frequency, c.command[0].duration);
+        break; 
+        case "ntn":
+            boardNoTone(c.command[0].pin);
+        break; 
+        case "awn":
+            boardAnalogWritens(c.command[0].pin, c.command[0].value, c.command[0].period);
+        break;
+        case "bl":
+            boardBlink(c.command[0].delay, c.command[0].duration, c.command[0].pin);
+        break;            
 	}
-	/*
-	switch(c.command[0].cmd.toLowerCase()){
-		case "mode":
-			boardPinMode(c.command[0].pin, c.command[0].mode);
-		break;
-		case "write":
-			if( c.command[0].pin.toLowerCase().startsWith('d') )
-				boardDigitalWrite(c.command[0].pin, c.command[0].value);
-			else
-				boardAnalogWrite(c.command[0].pin, c.command[0].value);
-				
-		break;
-		case "read":
-			if( c.command[0].pin.toLowerCase().startsWith('d') )
-				boardDigitalRead(c.command[0].pin);
-			else
-				boardAnalogRead(c.command[0].pin);
-		break;
-	}
-	*/
 }
 
 //parse the info request from the client-html
@@ -230,23 +278,11 @@ function sendWriteRequest(){
 	}
 }
 
-function readback(mpin, callback){
+var readback = function(mpin, callback){
 	if(typeof(socket) != 'undefined' ){
 		socket.on('read-back-'+mpin,function(data){
-			//console.log(data);
-			//console.log(JSON.parse(data));
-			//callback(JSON.parse(data));
 			callback(data);
 		});
 	}
 }
 
-exports.setBoard = setBoard;
-exports.setLogger = setLogger;
-exports.read = read;
-exports.write = write;
-exports.HIGH = utils.HIGH;
-exports.LOW = utils.LOW;
-exports.TRUE = utils.TRUE;
-exports.FALSE = utils.FALSE;
-exports.PARAMS = utils.PARAMS;

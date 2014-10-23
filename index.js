@@ -1,84 +1,33 @@
 /***
- * author: sergio tomasello - https://github.com/quasto
+ * file: index.js
+ * version: 0.5.0
+ * author: https://github.com/quasto
  * license: mit
  ***/
+"use strict";
 
+var linino = exports;
+
+exports.board		= require('./board');
+exports.htmlboard	= require('./htmlboard');
+exports.version = "0.0.6";
+ 
 /*** import all prototype functions used in this module ***/
 require('./utils/proto');
-config = require('./config');
 
-/*** configuring the logger ***/
-_loggerhandlers = ['file','console','all'];
-_loggerlevels = ['debug','info','warning','error'];
-_loggerstatus = [true,false];
-
-var winston = require('winston'),
-	fs = require('fs'),
-	path = require('path'),
-	handlers = [],
-	logger;
-
-var logdir = path.join(__dirname,'logs');
-	
-if( !_loggerhandlers.contains(config.logger.handler) )
-	throw new Error("Set correctly property 'logger handler' in config file. "+_loggerhandlers);
-
-if( !_loggerlevels.contains(config.logger.level) )
-	throw new Error("Set correctly property 'logger level' in config file. "+_loggerlevels);
-
-if( !_loggerstatus.contains(config.logger.off) )
-	throw new Error("Set correctly property 'logger on' in config file. "+_loggerstatus);
-
-if( !fs.existsSync(logdir) ){
-	fs.mkdirSync(logdir);
-}	
-
-var file_transport = new (winston.transports.File)({ 	silent:	config.logger.off,
-														filename: path.join(logdir,'ideino-linino-lib.log'), 
-														level: config.logger.level,
-														maxsize: 100000,
-														maxFiles: 3,
-														timestamp: true});
-													
-var console_transport = new (winston.transports.Console)({ 	silent:	config.logger.off, 
-															level: config.logger.level,
-															timestamp: true});
-
-if(config.logger.handler == 'file')
-	handlers.push( file_transport );
-if(config.logger.handler == 'console')
-	handlers.push( console_transport );
-if(config.logger.handler == 'all'){
-	handlers.push( file_transport );
-	handlers.push( console_transport );
-}
-
-logger = new (winston.Logger)({
-	transports: handlers
-  });
-
-  
 /*** starting and setting the boards ***/
-var board = new require('./board');
-board.setLogger(logger);
-//board.setConfig(config);
+var board;
+exports.Board = function(options) {
+	return getBoard(options);
+}; 
 
-//var dashboard = require('./dashboard');
+exports.Htmlboard = function(options){
+	var h = new linino.htmlboard(options, getBoard(options));
+	return h;
+};
 
-var htmlboard = require('./htmlboard');
-htmlboard.setBoard(board);
-htmlboard.setLogger(logger);
-
-
-exports.Board = board;
-//exports.Dashboard = dashboard;
-exports.Htmlboard = htmlboard;
-
-/*
-exports.Board = board;
-exports.Htmlboard = function(){
-	var htmlboard = require('./htmlboard');
-	htmlboard.setBoard(board);
-	htmlboard.setLogger(logger);
-	return htmlboard;
-};*/
+function getBoard(options){
+	if(!board || typeof(board) == 'undefined' )
+		board = new linino.board(options);
+	return board;
+};

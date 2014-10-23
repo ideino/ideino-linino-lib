@@ -1,5 +1,0 @@
-#!/bin/sh
-
-#export PATH=/usr/bin:/bin:/sbin
-
-ps wwww | grep -ie $1 | grep -v grep | awk '{print $1}' | xargs kill -9
