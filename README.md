@@ -4,9 +4,17 @@
 
 Take a look [here](http://wiki.linino.org/doku.php?id=wiki:nodejscript) on the Linino wiki to perform  the installation of Node.js.
 
-To use linino-lib, you need to upgrade your Linino OS version to XXX or higher and install the corresponding mcu firmware. You will find the firmware in `/etc/linino/` folder.
 
-Once you have browsed it via SSH connection, install it with the `run-avrdude` tool :
+To use linino-lib, you need to upgrade your Linino OS to the latest version that include LininoIO, and install the corresponding mcu firmware. If your board does not have LininoIO follow [this guide](http://wiki.linino.org/doku.php?id=wiki:upgradetolininoio) to install it. Otherwise download the latest version for [Linino One](http://download.linino.org/linino_distro/lininoIO/latest/lininoIO-generic-linino-one-squashfs-sysupgrade.bin) or for [Arduino Yùn](http://download.linino.org/linino_distro/lininoIO/latest/lininoIO-generic-linino-yun-squashfs-sysupgrade.bin) and upgrade your board running sysupgrade as explained here. Before start upgrade, if you installed ideino ide, open the sysupgrade configuration file and add few lines:
+
+    > vi /etc/sysupgrade.conf
+    ...
+    /etc/init.d/ideino
+    /etc/init.d/ideinoautorun
+    /usr/lib/lua/luci/view/linino/homepage.htm
+    /www/luci-static/resources/linino/ideino.js
+
+Finally you will find the firmware in /etc/linino/ folder, install it with the `run-avrdude` tool :
 
     > cd /etc/linino/
     > run-avrdude bathos-mcuio.hex
