@@ -191,8 +191,6 @@ Board.prototype.connect = function(callback){
                             }
                         else {
                             logger.debug(boardLayout.layout);
-                            logger.debug("I2c device Loaded");
-                            //cbkSeries("Linino Shields Loaded")
                             cbkSeries();
                             }
                     });
@@ -680,7 +678,7 @@ function isI2cRegistered(addr){
     }
 }
 /*** Linino Shields Functions ***/
-function registerShield( model, callback){
+function registerShield(model, callback){
     var opts = {aysnc: true, silent: true};
     if(!isShieldRegistered(model)){
         logger.debug("Registering Linino Shield " + model);
@@ -699,6 +697,25 @@ function registerShield( model, callback){
         logger.debug("Linino Shield " + model + " already registered");
         callback(null);
     }
+}
+function unregisterShield( model, callback){
+    if(isShieldRegistered(model)){
+        logger.debug("Unregistering Linino Shield " + model);
+        exec('echo ' + model + ' > /sys/devices/mcuio/shield_unregister',
+          function (error, stdout, stderr) {
+            if (error !== null) {
+                callback(error);
+            }
+            else{
+                setTimeout(function(){callback(null)},5000);
+            }
+        });
+    }
+    else
+    {
+        logger.debug("Linino Shield " + model + " already unregistered");
+        callback(null);
+    } 
 }
 function registerI2c( i2c_device, callback){
     if(!isI2cRegistered(i2c_device.addr)){
