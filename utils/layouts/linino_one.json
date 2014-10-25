@@ -5,8 +5,8 @@
             },
     "layout" : {
 		"digital": {
-            "D0":   "D0",
-            "D1":   "D1",
+            		"D0":   "D0",
+            		"D1":   "D1",
 			"D2":	"D2",
 			"D3":	"D3",
 			"D4":	"D4",
@@ -21,7 +21,7 @@
 			"D13":	"D13"
 			
 			,
-            "0":	"D0",
+            		"0":	"D0",
 			"1":	"D1",
 			"2":	"D2",
 			"3":	"D3",
@@ -143,14 +143,14 @@
 			"DEF"	: "D2",
 			"TYP"	: "digital",
 			"NUM"	: "117",
-			"MAP"	: "SDA"
+			"MAP"	: "D2"
 		},
 		"D3"	:	{
             "ENA"   : true,
 			"DEF"	: "D3",
 			"TYP"	: "digital",
 			"NUM"	: "116",
-			"MAP"	: "SCL"
+			"MAP"	: "D3"
 		},
 		"D4"	:	{
             "ENA"   : true,
@@ -185,42 +185,42 @@
 			"DEF"	: "D8",
 			"TYP"	: "digital",
 			"NUM"	: "104",
-			"MAP"	: "IO8"
+			"MAP"	: "D8"
 		},
 		"D9"	:	{
             "ENA"   : true,
 			"DEF"	: "D9",
 			"TYP"	: "digital",
 			"NUM"	: "105",
-			"MAP"	: "IO9"
+			"MAP"	: "D9"
 		},
 		"D10"	:	{
             "ENA"   : true,
 			"DEF"	: "D10",
 			"TYP"	: "digital",
 			"NUM"	: "106",
-			"MAP"	: "IO10"
+			"MAP"	: "D10"
 		},
 		"D11"	:	{
             "ENA"   : true,
 			"DEF"	: "D11",
 			"TYP"	: "digital",
 			"NUM"	: "107",
-			"MAP"	: "IO11"
+			"MAP"	: "D11"
 		},
 		"D12"	:	{
             "ENA"   : true,
 			"DEF"	: "D12",
 			"TYP"	: "digital",
 			"NUM"	: "122",
-			"MAP"	: "IO12"
+			"MAP"	: "D12"
 		},
 		"D13"	:	{
             "ENA"   : true,
 			"DEF"	: "D13",
 			"TYP"	: "digital",
 			"NUM"	: "115",
-			"MAP"	: "IO13"
+			"MAP"	: "D13"
 		},
 		"P3" 	:	{
             "ENA"   : true,
@@ -292,22 +292,26 @@
 	"timer": {
 		"T0"	: {
 			"DEF"	: "T0",
-			"USE"	: false,
+			"SER"	: false,
+			"USE"	: [],
 			"SHA"	: false
 		},
 		"T1"	:	{
 			"DEF"	: "T1",
-			"USE"	: false,
+			"SER"	: false,
+            "USE"	: [],
 			"SHA"	: false
 		},
 		"T2"	:	{
 			"DEF"	: "T2",
-			"USE"	: false,
+			"SER"	: false,
+            "USE"	: [],
 			"SHA"	: false
 		},
 		"T3"	:	{
 			"DEF"	: "T3",
-			"USE"	: false,
+			"SER"	: false,
+            "USE"	: [],
 			"SHA"	: true
 		}
 		
