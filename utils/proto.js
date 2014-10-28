@@ -1,21 +1,5 @@
-/*
-Array.prototype.contains = function(obj) {
-    var i = this.length;
-    while (i--) {
-        if (this[i] === obj) {
-            return true;
-        }
-    }
-    return false;
-}
-*/
-String.prototype.startsWith = function (str){
-	return this.slice(0, str.length) == str;
-}
-
-String.prototype.endsWith = function (str){
-	return this.slice(-str.length) == str;
-}
+//Provides compatibility shims so that legacy JavaScript engines behave as closely as possible to ECMAScript 6 (Harmony).
+require('es6-shim');
 
 String.format = function() {
   var s = arguments[0];
