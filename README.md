@@ -474,8 +474,6 @@ To use one of the Linino Shields you must to add it before connect to the board,
 	    - in_temp_raw
 	    - in_temp_scale
 	- HUM: Humidity - Temperature
-	    - in_ 
-	- ACC: Accelerometer
 	    - temp1_input
 	    - humidity1_input 
 	- Frame Buffer devices: 

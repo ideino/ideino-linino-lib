@@ -1,15 +1,18 @@
 { 
-	"name" : "ideino-linino-lib",
-	"main" : "./index.js",
-	"dependencies": {
-		"socket.io": "*",
-		"winston": "0.7.3",
-		"underscore": "1.6.0",
-		"clone" : "0.1.17",
-		"epoll": "0.1.7",
-		"string": "1.9.0",
-		"args-js": "0.10.4",
-		"async": "0.9.0",
-        "shelljs": "*"
-	  }	
+"name" : "ideino-linino-lib",
+"description": "linino node.js library",
+"version" : "0.1.1",
+"main" : "./index.js",
+"dependencies": {
+	"socket.io": "*",
+	"winston": "0.7.3",
+	"underscore": "1.6.0",
+	"clone" : "0.1.17",
+	"epoll": "0.1.7",
+	"string": "1.9.0",
+	"args-js": "0.10.4",
+	"async": "0.9.0",
+	"shelljs": "*",
+	"es6-shim": ">=0.20.1"
+	}
 }
