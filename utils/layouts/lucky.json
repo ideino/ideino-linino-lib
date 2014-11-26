@@ -16,15 +16,16 @@
             "LED2": "LED2",
             "PIR":  "PIR",
             "REL1": "REL1",
-            "REL2": "REL2",
-            "OLED": "OLED"
+            "REL2": "REL2"
+            
         },
     	"i2c": {
 	        "I2C-0": {
 	            "ACC": "ACC",
 	            "MAG": "MAG",
 	            "HUM": "HUM",
-	            "ALT": "ALT"
+	            "ALT": "ALT",
+                "OLED": "OLED"
 	            }
         }
 	},
