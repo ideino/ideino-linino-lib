@@ -196,9 +196,34 @@ Board.prototype.connect = function(callback){
                     });
         },
         four: function(cbkSeries){
+                async.each(boardLayout.fb_tmp,
+                    function(fbDevice, cbkEach){
+                         registerI2c(fbDevice, function(err){
+                            if(!err){
+                                connectFrameBuffer(fbDevice, that.options, function(err) {
+                                    if(!err){
+                                        logger.debug("Fb device "+fbDevice.name+" Loaded");
+                                        cbkEach();
+                                    }
+                                });
+                            }
+                        });
+                    },
+                    function(err) {                   
+                        if(err) {
+                            logger.error("Error during fb loading: "+  err.message);
+                            }
+                        else {
+                            logger.debug(boardLayout.layout);
+                            cbkSeries();
+                            }
+                    });
+        },
+        five: function(cbkSeries){
                     chk.setBoardLayout(boardLayout);
                     chk.setLogger(logger);
                     delete (boardLayout.i2c_tmp);    //remove temporary i2c device information
+                    delete (boardLayout.fb_tmp);    //remove temporary fb device information
                     cbkSeries();
         }
     },
@@ -209,7 +234,6 @@ Board.prototype.connect = function(callback){
         }
         else{
             that.blink(50, 1500,'D13'/*,true*/);
-            setInterval(function(){},60 * 1000)
             logger.info("Board Connection Success.");
             callback();
         }
@@ -251,7 +275,7 @@ Board.prototype.pinMode = function() {
 			{mode:		Args.STRING | Args.Required },
 			{pullup:	Args.BOOL 	| Args.Optional, _default : false },
 		], arguments);
-	
+            
         args.pin = chk.lookUpPin(args.pin);
 		var check = chk.pinMode(args.pin, args.mode, boardLayout);
 		if(check instanceof Error)
@@ -472,7 +496,7 @@ Board.prototype.i2cRead = function() {
             if(typeof(args.callback) != 'undefined'){
                 var opts = clone(this.options); //faccio un clone delle opzioni generali ricavate nella connect
 				utils.mergeRecursive(opts, args.options); 
-                
+                //watch
                 boardLayout.register[args.pin].PIN.watch(args.field, opts, function(err,val){
                     if(err) { throw err; }
                     else {args.callback(val);}
@@ -538,23 +562,38 @@ Board.prototype.tone = function() {
 		var args = Args([
 			{ pin: 			Args.STRING 	| Args.Required },
 			{ frequency:	Args.FLOAT 		| Args.Required },
-			{ duration:		Args.INT 		| Args.Optional, _default : 0 }
+			{ duration:		Args.INT 		| Args.Optional, _default : 0 },
+            { callback:	    Args.FUNCTION 	| Args.Optional }
 		], arguments);
 
 		var that = this;
 		period = Math.floor(1/args.frequency*1e9);		//convert frequency in period
-		var check = that.analogWritens(args.pin, period/2, period);
+        args.pin = chk.lookUpPin(args.pin, boardLayout.layout);
+		var check = chk.analogWritens(args.pin, period/2, period);
 		if(check instanceof Error){
 			throw check;
 		}
-		if(args.duration > 0){		
-			setTimeout(function(){
-				var check = that.noTone(args.pin);
-				if(check instanceof Error){
-					throw check;
-				}
-			},args.duration);
-		}
+        else{
+            if( typeof(args.callback) == 'function' ){
+				boardLayout.register[args.pin].PIN.writens( Math.floor(period/2), period, function(val){
+				    args.callback(val);
+                    if(args.duration > 0){	
+                        setTimeout(function(){
+				            boardLayout.register[args.pin].PIN.writens(boardLayout.register[args.pin].RES, boardLayout.register[args.pin].MAX, function(){});
+                        },args.duration);
+                    }
+                });
+            }
+            else{
+				boardLayout.register[args.pin].PIN.writeSyncns( Math.floor(period/2), period);
+                if(args.duration > 0){	
+                    setTimeout(function(){ 
+				        boardLayout.register[args.pin].PIN.writeSyncns(boardLayout.register[args.pin].RES, boardLayout.register[args.pin].MAX);
+                    },args.duration);
+				    return args.value;
+                }
+            }
+        }
 		return true;
 	}
 	catch(err){
@@ -567,10 +606,22 @@ Board.prototype.noTone = function() {
 						{ pin: 			Args.STRING 	| Args.Required },
 					], arguments);
 		
-		var check = this.analogWritens(args.pin, boardLayout.register[args.pin].RES, boardLayout.register[args.pin].MAX);
+        args.pin = chk.lookUpPin(args.pin, boardLayout.layout);
+		var check = chk.analogWritens(args.pin, boardLayout.register[args.pin].RES, boardLayout.register[args.pin].MAX);
 		if(check instanceof Error){
 			throw check;
-		}			
+		}
+        else{
+				if( typeof(args.callback) == 'function' ){
+                    boardLayout.register[args.pin].PIN.writens( boardLayout.register[args.pin].RES, boardLayout.register[args.pin].MAX, function(val){
+						args.callback(val);						
+					});
+				}
+				else{
+					boardLayout.register[args.pin].PIN.writeSyncns(boardLayout.register[args.pin].RES, boardLayout.register[args.pin].MAX);
+					return args.value;
+				}
+			}
 		return true;
 	}
 	catch(err){
@@ -616,6 +667,7 @@ function loadBoardLayout(boardModel){
     boardLayout = require('./utils/layouts/'+boardModel);
     boardLayout.shields = [];
     boardLayout.i2c_tmp = [];
+    boardLayout.fb_tmp = [];
     boardLayout.register.CHK = {};
 }
 
@@ -678,7 +730,7 @@ function isI2cRegistered(addr){
     }
 }
 /*** Linino Shields Functions ***/
-function registerShield(model, callback){
+function registerShield( model, callback){
     var opts = {aysnc: true, silent: true};
     if(!isShieldRegistered(model)){
         logger.debug("Registering Linino Shield " + model);
@@ -698,25 +750,6 @@ function registerShield(model, callback){
         callback(null);
     }
 }
-function unregisterShield( model, callback){
-    if(isShieldRegistered(model)){
-        logger.debug("Unregistering Linino Shield " + model);
-        exec('echo ' + model + ' > /sys/devices/mcuio/shield_unregister',
-          function (error, stdout, stderr) {
-            if (error !== null) {
-                callback(error);
-            }
-            else{
-                setTimeout(function(){callback(null)},5000);
-            }
-        });
-    }
-    else
-    {
-        logger.debug("Linino Shield " + model + " already unregistered");
-        callback(null);
-    } 
-}
 function registerI2c( i2c_device, callback){
     if(!isI2cRegistered(i2c_device.addr)){
         logger.debug("Registering I2c device " + i2c_device.name);
@@ -726,6 +759,7 @@ function registerI2c( i2c_device, callback){
                 callback(error);
             }
             else{
+                logger.debug("I2c device " + i2c_device.name+ " registered");
                 setTimeout(function(){callback(null)},5000);
             }
         });
@@ -765,7 +799,7 @@ function connectShield(shieldModel, opts, callback){
         shieldRegister.forEach(function(element) {
             //adding register element of the layout shield to the layout board, and create an i2c instance
             boardLayout.register[element.DEF] = element;
-            boardLayout.register[element.DEF].PIN = new I2c(element,clone(opts));
+            boardLayout.register[element.DEF].PIN = new I2c(element,clone(opts)); //clone(opts)
         });  
 
         shieldRegister = {};
@@ -800,13 +834,38 @@ function connectI2c(i2c_device, opts, callback){
             boardLayout.register[i2c_device.name].TYP= 'i2c';
             boardLayout.register[i2c_device.name].DRV= i2c_device.driver;
             boardLayout.register[i2c_device.name].ADD= i2c_device.addr;
-            boardLayout.register[i2c_device.name].PIN = new I2c(boardLayout.register[i2c_device.name], opts);        
+            boardLayout.register[i2c_device.name].PIN = new I2c(boardLayout.register[i2c_device.name], opts); 
         }
         callback(null); 
     }
     catch(err){
-        console.log(err.message);
+        //console.log(err.message);
         callback(new Error("I2C DEVICE CONNECT ERROR: " + err.message));   
+    }
+
+}
+function connectFrameBuffer(fb_device, opts, callback){
+    try{
+        if(!(boardLayout.layout.hasOwnProperty('fb'))){
+            boardLayout.layout['fb'] = {};
+        }
+        //key insert in register board layout    
+        if(!(boardLayout.register.hasOwnProperty(fb_device.name))){
+            boardLayout.layout.fb[fb_device.name]=fb_device.name;
+            boardLayout.register[fb_device.name] = {}; 
+            boardLayout.register[fb_device.name].DEF= fb_device.name;
+            boardLayout.register[fb_device.name].BUS= fb_device.bus;
+            boardLayout.register[fb_device.name].TYP= 'fb';
+            boardLayout.register[fb_device.name].DRV= fb_device.driver;
+            boardLayout.register[fb_device.name].ADD= fb_device.addr;
+            boardLayout.register[fb_device.name].MAP= 'fb'+fb_device.bus.slice(-1);
+            boardLayout.register[fb_device.name].PIN = new FrameBuffer(boardLayout.register[fb_device.name], opts); 
+        }
+        callback(null); 
+    }
+    catch(err){
+        //console.log(err.message);
+        callback(new Error("FB DEVICE CONNECT ERROR: " + err.message));   
     }
 
 }
@@ -829,8 +888,21 @@ Board.prototype.addShield = function(shieldModel){
     
 }
 Board.prototype.addI2c = function(name, driver, addr, bus){
-  
+    //try{
+        boardLayout['i2c_tmp'].push({name: name.toUpperCase(), driver: driver, addr: addr, bus: 'i2c-'+bus}); 
+    /*}
+    catch(err){
+        logger.error("ADD I2C ERROR - " + err.message);
+    }*/
+     
+}
+Board.prototype.addFrameBuffer = function(name, driver, addr, bus){
+    //try{
         //check ?
-        boardLayout['i2c_tmp'].push({name: name.toUpperCase(), driver: driver, addr: addr, bus: 'i2c-'+bus});      
+        boardLayout['fb_tmp'].push({name: name.toUpperCase(), driver: driver, addr: addr, bus: 'i2c-'+bus});      
+    /*}
+    catch(err){
+        logger.error("ADD FRAMEBUFFER ERROR - " + err.message);
+    }*/
      
 }
