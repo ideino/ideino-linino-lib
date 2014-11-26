@@ -1,7 +1,7 @@
 { 
 "name" : "ideino-linino-lib",
 "description": "linino node.js library",
-"version" : "0.1.0",
+"version" : "0.1.1",
 "main" : "./index.js",
 "dependencies": {
 	"socket.io": "*",
