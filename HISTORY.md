@@ -1,5 +1,6 @@
-lininoIO
- 0.1.1==================
+
+lininoIO 0.1.1
+==================
 * upd: async functions without blocking IO calls
 
 * upd: improve watch functions with multiple handlers to the same object
@@ -11,8 +12,8 @@ lininoIO
 * upd: updated the max value of pwm period in the json layouts files
 
 
-lininoIO
- 0.1.0==================
+lininoIO 0.1.0
+==================
 
 * upd: automatic layout board model recognition
 
