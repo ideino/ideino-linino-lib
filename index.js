@@ -10,7 +10,7 @@ var linino = exports;
 
 exports.board		= require('./board');
 exports.htmlboard	= require('./htmlboard');
-exports.version = "0.1.1";
+exports.version = "0.1.2";
  
 /*** import all prototype functions used in this module ***/
 require('./utils/proto');
