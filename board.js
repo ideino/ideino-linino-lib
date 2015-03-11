@@ -316,7 +316,8 @@ Board.prototype.pinMode = function() {
 	}
 	catch(err){
 		logger.error("BOARD PIN MODE ERROR - " + err.message);
-		process.exit(1);
+        throw new Error("BOARD PIN MODE ERROR - " + err.message);
+		//process.exit(1);
 	}
 }
 Board.prototype.digitalWrite = function() {
@@ -350,6 +351,7 @@ Board.prototype.digitalWrite = function() {
 	}
 	catch(err){
 		logger.error("BOARD DIGITAL WRITE ERROR - " + err.message);
+        throw new Error("BOARD DIGITAL WRITE ERROR - " + err.message);
 	}
 }
 Board.prototype.digitalRead = function() {
@@ -378,6 +380,8 @@ Board.prototype.digitalRead = function() {
 	}
 	catch(err){
 		logger.error("BOARD DIGITAL READ ERROR - " + err.message);
+        throw new Error("BOARD DIGITAL READ ERROR - " + err.message);
+
 	}  
 }
 Board.prototype.analogWrite = function() {
@@ -409,6 +413,7 @@ Board.prototype.analogWrite = function() {
 	}
 	catch(err){
 		logger.error("BOARD ANALOG WRITE ERROR - " + err.message);
+        throw new Error("BOARD ANALOG WRITE ERROR - " + err.message);
 	}
 }
 Board.prototype.analogWritens = function() {
@@ -439,6 +444,7 @@ Board.prototype.analogWritens = function() {
 	}
 	catch(err){
 		logger.error("BOARD ANALOG WRITE NS ERROR - " + err.message);
+        throw new Error("BOARD ANALOG WRITE NS ERROR - " + err.message);
 	}
 }
 Board.prototype.analogRead = function() {
@@ -474,6 +480,7 @@ Board.prototype.analogRead = function() {
 	}
 	catch(err){
 		logger.error("BOARD ANALOG READ ERROR - " + err.message);
+        throw new Error("BOARD ANALOG READ ERROR - " + err.message);
 	}
 }
 Board.prototype.i2cRead = function() {
