@@ -1,6 +1,6 @@
 {
     "info": {
-        "name": "arduino_industrial_101",
+        "name": "arduino_chiwawa",
         "type": "board"
     },
     "layout": {
@@ -137,7 +137,7 @@
             "TYP":   "digital",
             "NUM":   "?",
             "MAP":   "?"
-        },        
+        },
         "D2": {
             "ENA":   true,
             "DEF":   "D2",
