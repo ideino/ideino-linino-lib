@@ -1,0 +1,301 @@
+{
+	"info" :{
+		"name": "arduino_tian",
+		"type": "board"
+		},
+	"layout" : {
+		"digital": {
+			"D2":	"D2",
+			"D3":	"D3",
+			"D4":	"D4",
+			"D5":	"D5",
+			"D6":	"D6",
+			"D7":	"D7",
+			"D8":	"D8",
+			"D9":	"D9",
+			"D10":	"D10",
+			"D11":	"D11",
+			"D12":	"D12",
+			"D13":	"D13",
+			"2":	"D2",
+			"3":	"D3",
+			"4":	"D4",
+			"5":	"D5",
+			"6":	"D6",
+			"7":	"D7",
+			"8":	"D8",
+			"9":	"D9",
+			"10":	"D10",
+			"11":	"D11",
+			"12":	"D12",
+			"13":	"D13"
+			},
+		"analog":	{
+			"A0":	"A0",
+			"A1":	"A1",
+			"A2":	"A2",
+			"A3":	"A3",
+			"A4":	"A4",
+			"A5":	"A5",
+			"0":	"A0",
+			"1":	"A1",
+			"2":	"A2",
+			"3":	"A3",
+			"4":	"A4",
+			"5":	"A5"
+		},
+		"pwm":	{
+			"P0":	"P0",
+			"P1":	"P1",
+			"P2":	"P2",
+			"P3":	"P3",
+			"P4":	"P4",
+			"P5":	"P5",
+			"P6":	"P6",
+			"0":	"P0",
+			"1":	"P1",
+			"2":	"P2",
+			"3":	"P3",
+			"4":	"P4",
+			"5":	"P5",
+			"6":	"P6"
+		},
+		"servo": {
+			"S0":	"P0",
+			"S1":	"P1",
+			"S2":	"P2",
+			"S3":	"P3",
+			"S4":	"P4",
+			"S5":	"P5",
+			"S6":	"P6",
+			"0":	"P0",
+			"1":	"P1",
+			"2":	"P2",
+			"3":	"P3",
+			"4":	"P4",
+			"5":	"P5",
+			"6":	"P6"
+
+		}
+	},
+	"register": {
+		"A0"	:	{
+			"ENA"	: true,
+			"DEF"	: "A0",
+			"TYP"	: "analog",
+			"NUM"	: "100",
+			"MAP"	: "A0"
+		},
+		"A1"	:	{
+			"ENA"	: true,
+			"DEF"	: "A1",
+			"TYP"	: "analog",
+			"NUM"	: "101",
+			"MAP"	: "A1"
+		},
+		"A2"	:	{
+			"ENA"	: true,
+			"DEF"	: "A2",
+			"TYP"	: "analog",
+			"NUM"	: "102",
+			"MAP"	: "A2"
+		},
+		"A3"	:	{
+			"ENA"	: true,
+			"DEF"	: "A3",
+			"TYP"	: "analog",
+			"NUM"	: "103",
+			"MAP"	: "A3"
+		},
+		"A4"	:	{
+			"ENA"	: true,
+			"DEF"	: "A4",
+			"TYP"	: "analog",
+			"NUM"	: "104",
+			"MAP"	: "A4"
+		},
+		"A5"	:	{
+			"ENA"	: true,
+			"DEF"	: "A5",
+			"TYP"	: "analog",
+			"NUM"	: "105",
+			"MAP"	: "A5"
+		},
+		"D2"	:	{
+			"ENA"	: true,
+			"DEF"	: "D2",
+			"TYP"	: "digital",
+			"NUM"	: "106",
+			"MAP"	: "D2"
+		},
+		"D3"	:	{
+			"ENA"	: true,
+			"DEF"	: "D3",
+			"TYP"	: "digital",
+			"NUM"	: "107",
+			"MAP"	: "D3"
+		},
+		"D4"	:	{
+			"ENA"	: true,
+			"DEF"	: "D4",
+			"TYP"	: "digital",
+			"NUM"	: "108",
+			"MAP"	: "D4"
+		},
+		"D5"	:	{
+			"ENA"	: true,
+			"DEF"	: "D5",
+			"TYP"	: "digital",
+			"NUM"	: "109",
+			"MAP"	: "D5"
+		},
+		"D6"	:	{
+			"ENA"   : true,
+			"DEF"	: "D6",
+			"TYP"	: "digital",
+			"NUM"	: "110",
+			"MAP"	: "D6"
+		},
+		"D7"	:	{
+			"ENA"	: true,
+			"DEF"	: "D7",
+			"TYP"	: "digital",
+			"NUM"	: "111",
+			"MAP"	: "D7"
+		},
+		"D8"	:	{
+			"ENA"	: true,
+			"DEF"	: "D8",
+			"TYP"	: "digital",
+			"NUM"	: "112",
+			"MAP"	: "D8"
+		},
+		"D9"	:	{
+			"ENA"	: true,
+			"DEF"	: "D9",
+			"TYP"	: "digital",
+			"NUM"	: "113",
+			"MAP"	: "D9"
+		},
+		"D10"	:	{
+			"ENA"	: true,
+			"DEF"	: "D10",
+			"TYP"	: "digital",
+			"NUM"	: "114",
+			"MAP"	: "D10"
+		},
+		"D11"	:	{
+			"ENA"	: true,
+			"DEF"	: "D11",
+			"TYP"	: "digital",
+			"NUM"	: "115",
+			"MAP"	: "D11"
+		},
+		"D12"	:	{
+			"ENA"	: true,
+			"DEF"	: "D12",
+			"TYP"	: "digital",
+			"NUM"	: "116",
+			"MAP"	: "D12"
+		},
+		"D13"	:	{
+			"ENA"	: true,
+			"DEF"	: "D13",
+			"TYP"	: "digital",
+			"NUM"	: "117",
+			"MAP"	: "D13"
+		},
+		"P0" 	:	{
+			"ENA"	: true,
+			"DEF"	: "P0",
+			"TYP"	: "pwm",
+			"MAP"	: "D0",
+			"BIT"	: "16",
+			"NUM"	: "0",
+			"TIM"	: "T0",
+			"MAX"	: 2147483500,
+			"RES"	: 500
+		},
+		"P1" 	:	{
+			"ENA"	: true,
+			"DEF"	: "P1",
+			"TYP"	: "pwm",
+			"MAP"	: "D1",
+			"BIT"	: "16",
+			"NUM"	: "1",
+			"TIM"	: "T1",
+			"MAX"	: 2147483500,
+			"RES"	: 500
+		},
+		"P2" 	:	{
+			"ENA"	: true,
+			"DEF"	: "P2",
+			"TYP"	: "pwm",
+			"MAP"	: "D2",
+			"BIT"	: "16",
+			"NUM"	: "2",
+			"TIM"	: "T1",
+			"MAX"	: 2147483500,
+			"RES"	: 500
+		},
+		"P3" 	:	{
+			"ENA"	: true,
+			"DEF"	: "P3",
+			"TYP"	: "pwm",
+			"MAP"	: "D3",
+			"BIT"	: "16",
+			"NUM"	: "3",
+			"TIM"	: "T1",
+			"MAX"	: 2147483500,
+			"RES"	: 500
+		},
+		"P4" 	:	{
+			"ENA"	: true,
+			"DEF"	: "P4",
+			"TYP"	: "pwm",
+			"MAP"	: "D4",
+			"BIT"	: "16",
+			"NUM"	: "4",
+			"TIM"	: "T0",
+			"MAX"	: 2147483500,
+			"RES"	: 500
+		},
+		"P5" 	:	{
+			"ENA"	: true,
+			"DEF"	: "P5",
+			"TYP"	: "pwm",
+			"MAP"	: "D5",
+			"BIT"	: "16",
+			"NUM"	: "5",
+			"TIM"	: "T0",
+			"MAX"	: 2147483500,
+			"RES"	: 500
+		},
+		"P6" 	:	{
+			"ENA"	: true,
+			"DEF"	: "P6",
+			"TYP"	: "pwm",
+			"MAP"	: "D6",
+			"BIT"	: "16",
+			"NUM"	: "6",
+			"TIM"	: "T0",
+			"MAX"	: 2147483500,
+			"RES"	: 500
+		}
+	},
+	"timer": {
+		"T0"	: {
+			"DEF"	: "T0",
+			"SER"	: false,
+			"USE"	: [],
+			"SHA"	: true
+		},
+		"T1"	:	{
+			"DEF"	: "T1",
+			"SER"	: false,
+			"USE"	: [],
+			"SHA"	: true
+		}
+	},
+	"disabled": []
+}
