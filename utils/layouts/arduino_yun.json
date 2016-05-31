@@ -1,320 +1,320 @@
 {
-	"info" :{
-                "name": "arduino_yun",
-                "type": "board"
-            },
-    "layout" : {
-		"digital": {
-            "D0":   "D0",
-            "D1":   "D1",
-			"D2":	"D2",
-			"D3":	"D3",
-			"D4":	"D4",
-			"D5":	"D5",
-			"D6":	"D6",
-			"D7":	"D7",
-			"D8":	"D8",
-			"D9":	"D9",
-			"D10":	"D10",
-			"D11":	"D11",
-			"D12":	"D12",
-			"D13":	"D13"
-			
-			,
-            "0":	"D0",
-			"1":	"D1",
-			"2":	"D2",
-			"3":	"D3",
-			"4":	"D4",
-			"5":	"D5",
-			"6":	"D6",
-			"7":	"D7",
-			"8":	"D8",
-			"9":	"D9",
-			"10":	"D10",
-			"11":	"D11",
-			"12":	"D12",
-			"13":	"D13"
-		},
-		"analog":	{
-			"A0":	"A0",
-			"A1":	"A1",
-			"A2":	"A2",
-			"A3":	"A3",
-			"A4":	"A4",
-			"A5":	"A5"
-			
-			,
-			"0":	"A0",
-			"1":	"A1",
-			"2":	"A2",
-			"3":	"A3",
-			"4":	"A4",
-			"5":	"A5"
-		},
-		"pwm":	{
-			"P3":	"P3",
-			"P5":	"P5",
-			"P6":	"P6",
-			"P9":	"P9",
-			"P10":	"P10",
-			"P11":	"P11"
-			,
-			"3":	"P3",
-			"5":	"P5",
-			"6":	"P6",
-			"9":	"P9",
-			"10":	"P10",
-			"11":	"P11"
-			
-		},
-		"servo": {
-			"S5":	"P5",
-			"S9":	"P9",
-			"S10":	"P10",
-			"S11":	"P11"
-			,
-			"5":	"P5",
-			"9":	"P9",
-			"10":	"P10",
-			"11":	"P11"
+    "info": {
+        "name": "arduino_yun",
+        "type": "board"
+    },
+    "layout": {
+        "digital": {
+            "D0":    "D0",
+            "D1":    "D1",
+            "D2":    "D2",
+            "D3":    "D3",
+            "D4":    "D4",
+            "D5":    "D5",
+            "D6":    "D6",
+            "D7":    "D7",
+            "D8":    "D8",
+            "D9":    "D9",
+            "D10":   "D10",
+            "D11":   "D11",
+            "D12":   "D12",
+            "D13":   "D13"
 
-		}
-	},
-	"register": {
-		"A0"	:	{
-            "ENA"   : true,
-			"DEF"	: "A0",
-			"TYP"	: "analog",
-			"NUM"	: "139",
-			"MAP"	: "A0"
-		},
-		"A1"	:	{
-            "ENA"   : true,
-			"DEF"	: "A1",
-			"TYP"	: "analog",
-			"NUM"	: "138",
-			"MAP"	: "A1"
-		},
-		"A2"	:	{
-            "ENA"   : true,
-			"DEF"	: "A2",
-			"TYP"	: "analog",
-			"NUM"	: "137",
-			"MAP"	: "A2"
-		},
-		"A3"	:	{
-            "ENA"   : true,
-			"DEF"	: "A3",
-			"TYP"	: "analog",
-			"NUM"	: "136",
-			"MAP"	: "A3"
-		},
-		"A4"	:	{
-            "ENA"   : true,
-			"DEF"	: "A4",
-			"TYP"	: "analog",
-			"NUM"	: "133",
-			"MAP"	: "A4"
-		},
-		"A5"	:	{
-            "ENA"   : true,
-			"DEF"	: "A5",
-			"TYP"	: "analog",
-			"NUM"	: "132",
-			"MAP"	: "A5"
-		},
-		"D0"	:	{
-            "ENA"   : false,
-			"DEF"	: "D0",
-			"TYP"	: "digital",
-			"NUM"	: "?",
-			"MAP"	: "?"
-		},
-		"D1"	:	{
-            "ENA"   : false,
-			"DEF"	: "D1",
-			"TYP"	: "digital",
-			"NUM"	: "?",
-			"MAP"	: "?"
-		},        
-		"D2"	:	{
-            "ENA"   : true,
-			"DEF"	: "D2",
-			"TYP"	: "digital",
-			"NUM"	: "117",
-			"MAP"	: "D2"
-		},
-		"D3"	:	{
-            "ENA"   : true,
-			"DEF"	: "D3",
-			"TYP"	: "digital",
-			"NUM"	: "116",
-			"MAP"	: "D3"
-		},
-		"D4"	:	{
-            "ENA"   : true,
-			"DEF"	: "D4",
-			"TYP"	: "digital",
-			"NUM"	: "120",
-			"MAP"	: "D4"
-		},
-		"D5"	:	{
-            "ENA"   : true,
-			"DEF"	: "D5",
-			"TYP"	: "digital",
-			"NUM"	: "114",
-			"MAP"	: "D5"
-		},
-		"D6"	:	{
-            "ENA"   : true,
-			"DEF"	: "D6",
-			"TYP"	: "digital",
-			"NUM"	: "123",
-			"MAP"	: "D6"
-		},
-		"D7"	:	{
-            "ENA"   : false,
-			"DEF"	: "D7",
-			"TYP"	: "digital",
-			"NUM"	: "130",
-			"MAP"	: "HSHK"
-		},
-		"D8"	:	{
-            "ENA"   : true,
-			"DEF"	: "D8",
-			"TYP"	: "digital",
-			"NUM"	: "104",
-			"MAP"	: "D8"
-		},
-		"D9"	:	{
-            "ENA"   : true,
-			"DEF"	: "D9",
-			"TYP"	: "digital",
-			"NUM"	: "105",
-			"MAP"	: "D9"
-		},
-		"D10"	:	{
-            "ENA"   : true,
-			"DEF"	: "D10",
-			"TYP"	: "digital",
-			"NUM"	: "106",
-			"MAP"	: "D10"
-		},
-		"D11"	:	{
-            "ENA"   : true,
-			"DEF"	: "D11",
-			"TYP"	: "digital",
-			"NUM"	: "107",
-			"MAP"	: "D11"
-		},
-		"D12"	:	{
-            "ENA"   : true,
-			"DEF"	: "D12",
-			"TYP"	: "digital",
-			"NUM"	: "122",
-			"MAP"	: "D12"
-		},
-		"D13"	:	{
-            "ENA"   : true,
-			"DEF"	: "D13",
-			"TYP"	: "digital",
-			"NUM"	: "115",
-			"MAP"	: "D13"
-		},
-		"P3" 	:	{
-            "ENA"   : true,
-			"DEF"	: "P3",
-			"TYP"	: "pwm",
-			"MAP"	: "D3",
-			"BIT"	: "8",
-			"NUM"	: "0",
-			"TIM"	: "T0",
-			"MAX"	: 4000000,
-			"RES"	: 15625
-		},
-		"P5" 	:	{
-            "ENA"   : true,
-			"DEF"	: "P5",
-			"TYP"	: "pwm",
-			"MAP"	: "D5",
-			"BIT"	: "16",
-			"NUM"	: "4",
-			"TIM"	: "T1",
-			"MAX"	: 32767500,
-			"RES"	: 500
-		},
-		"P6" 	:	{
-            "ENA"   : true,
-			"DEF"	: "P6",
-			"TYP"	: "pwm",
-			"MAP"	: "D6",
-			"BIT"	: "16",
-			"NUM"	: "5",
-			"TIM"	: "T2",
-			"MAX"	: 16384000,
-			"RES"	: 64000
-		},
-		"P9" 	:	{
-            "ENA"   : true,
-			"DEF"	: "P9",
-			"TYP"	: "pwm",
-			"MAP"	: "D9",
-			"BIT"	: "16",
-			"NUM"	: "1",
-			"TIM"	: "T3",
-			"MAX"	: 32767500,
-			"RES"	: 500
-		},
-		"P10" 	:	{
-            "ENA"   : true,
-			"DEF"	: "P10",
-			"TYP"	: "pwm",
-			"MAP"	: "D10",
-			"BIT"	: "16",
-			"NUM"	: "2",
-			"TIM"	: "T3",
-			"MAX"	: 32767500,
-			"RES"	: 500
-		},
-		"P11" 	:	{
-            "ENA"   : true,
-			"DEF"	: "P11",
-			"TYP"	: "pwm",
-			"MAP"	: "D11",
-			"BIT"	: "16",
-			"NUM"	: "3",
-			"TIM"	: "T3",
-			"MAX"	: 32767500,
-			"RES"	: 500
-		}
-	},
-	"timer": {
-		"T0"	: {
-			"DEF"	: "T0",
-			"SER"	: false,
-            "USE"	: [],
-			"SHA"	: false
-		},
-		"T1"	:	{
-			"DEF"	: "T1",
-			"SER"	: false,
-            "USE"	: [],
-			"SHA"	: false
-		},
-		"T2"	:	{
-			"DEF"	: "T2",
-			"SER"	: false,
-            "USE"	: [],
-			"SHA"	: false
-		},
-		"T3"	:	{
-			"DEF"	: "T3",
-			"SER"	: false,
-            "USE"	: [],
-			"SHA"	: true
-		}
-		
-	},
+            ,
+            "0":     "D0",
+            "1":     "D1",
+            "2":     "D2",
+            "3":     "D3",
+            "4":     "D4",
+            "5":     "D5",
+            "6":     "D6",
+            "7":     "D7",
+            "8":     "D8",
+            "9":     "D9",
+            "10":    "D10",
+            "11":    "D11",
+            "12":    "D12",
+            "13":    "D13"
+        },
+        "analog": {
+            "A0":    "A0",
+            "A1":    "A1",
+            "A2":    "A2",
+            "A3":    "A3",
+            "A4":    "A4",
+            "A5":    "A5"
+
+            ,
+            "0":     "A0",
+            "1":     "A1",
+            "2":     "A2",
+            "3":     "A3",
+            "4":     "A4",
+            "5":     "A5"
+        },
+        "pwm": {
+            "P3":    "P3",
+            "P5":    "P5",
+            "P6":    "P6",
+            "P9":    "P9",
+            "P10":   "P10",
+            "P11":   "P11"
+            ,
+            "3":     "P3",
+            "5":     "P5",
+            "6":     "P6",
+            "9":     "P9",
+            "10":    "P10",
+            "11":    "P11"
+
+        },
+        "servo": {
+            "S5":    "P5",
+            "S9":    "P9",
+            "S10":   "P10",
+            "S11":   "P11"
+            ,
+            "5":     "P5",
+            "9":     "P9",
+            "10":    "P10",
+            "11":    "P11"
+
+        }
+    },
+    "register": {
+        "A0": {
+            "ENA":   true,
+            "DEF":   "A0",
+            "TYP":   "analog",
+            "NUM":   "139",
+            "MAP":   "A0"
+        },
+        "A1": {
+            "ENA":   true,
+            "DEF":   "A1",
+            "TYP":   "analog",
+            "NUM":   "138",
+            "MAP":   "A1"
+        },
+        "A2": {
+            "ENA":   true,
+            "DEF":   "A2",
+            "TYP":   "analog",
+            "NUM":   "137",
+            "MAP":   "A2"
+        },
+        "A3": {
+            "ENA":   true,
+            "DEF":   "A3",
+            "TYP":   "analog",
+            "NUM":   "136",
+            "MAP":   "A3"
+        },
+        "A4": {
+            "ENA":   true,
+            "DEF":   "A4",
+            "TYP":   "analog",
+            "NUM":   "133",
+            "MAP":   "A4"
+        },
+        "A5": {
+            "ENA":   true,
+            "DEF":   "A5",
+            "TYP":   "analog",
+            "NUM":   "132",
+            "MAP":   "A5"
+        },
+        "D0": {
+            "ENA":   false,
+            "DEF":   "D0",
+            "TYP":   "digital",
+            "NUM":   "?",
+            "MAP":   "?"
+        },
+        "D1": {
+            "ENA":   false,
+            "DEF":   "D1",
+            "TYP":   "digital",
+            "NUM":   "?",
+            "MAP":   "?"
+        },        
+        "D2": {
+            "ENA":   true,
+            "DEF":   "D2",
+            "TYP":   "digital",
+            "NUM":   "117",
+            "MAP":   "D2"
+        },
+        "D3": {
+            "ENA":   true,
+            "DEF":   "D3",
+            "TYP":   "digital",
+            "NUM":   "116",
+            "MAP":   "D3"
+        },
+        "D4": {
+            "ENA":   true,
+            "DEF":   "D4",
+            "TYP":   "digital",
+            "NUM":   "120",
+            "MAP":   "D4"
+        },
+        "D5": {
+            "ENA":   true,
+            "DEF":   "D5",
+            "TYP":   "digital",
+            "NUM":   "114",
+            "MAP":   "D5"
+        },
+        "D6": {
+            "ENA":   true,
+            "DEF":   "D6",
+            "TYP":   "digital",
+            "NUM":   "123",
+            "MAP":   "D6"
+        },
+        "D7": {
+            "ENA":   false,
+            "DEF":   "D7",
+            "TYP":   "digital",
+            "NUM":   "130",
+            "MAP":   "HSHK"
+        },
+        "D8": {
+            "ENA":   true,
+            "DEF":   "D8",
+            "TYP":   "digital",
+            "NUM":   "104",
+            "MAP":   "D8"
+        },
+        "D9": {
+            "ENA":   true,
+            "DEF":   "D9",
+            "TYP":   "digital",
+            "NUM":   "105",
+            "MAP":   "D9"
+        },
+        "D10": {
+            "ENA":   true,
+            "DEF":   "D10",
+            "TYP":   "digital",
+            "NUM":   "106",
+            "MAP":   "D10"
+        },
+        "D11": {
+            "ENA":   true,
+            "DEF":   "D11",
+            "TYP":   "digital",
+            "NUM":   "107",
+            "MAP":   "D11"
+        },
+        "D12": {
+            "ENA":   true,
+            "DEF":   "D12",
+            "TYP":   "digital",
+            "NUM":   "122",
+            "MAP":   "D12"
+        },
+        "D13": {
+            "ENA":   true,
+            "DEF":   "D13",
+            "TYP":   "digital",
+            "NUM":   "115",
+            "MAP":   "D13"
+        },
+        "P3": {
+            "ENA":   true,
+            "DEF":   "P3",
+            "TYP":   "pwm",
+            "MAP":   "D3",
+            "BIT":   "8",
+            "NUM":   "0",
+            "TIM":   "T0",
+            "MAX":   4000000,
+            "RES":   15625
+        },
+        "P5": {
+            "ENA":   true,
+            "DEF":   "P5",
+            "TYP":   "pwm",
+            "MAP":   "D5",
+            "BIT":   "16",
+            "NUM":   "4",
+            "TIM":   "T1",
+            "MAX":   32767500,
+            "RES":   500
+        },
+        "P6": {
+            "ENA":   true,
+            "DEF":   "P6",
+            "TYP":   "pwm",
+            "MAP":   "D6",
+            "BIT":   "16",
+            "NUM":   "5",
+            "TIM":   "T2",
+            "MAX":   16384000,
+            "RES":   64000
+        },
+        "P9": {
+            "ENA":   true,
+            "DEF":   "P9",
+            "TYP":   "pwm",
+            "MAP":   "D9",
+            "BIT":   "16",
+            "NUM":   "1",
+            "TIM":   "T3",
+            "MAX":   32767500,
+            "RES":   500
+        },
+        "P10": {
+            "ENA":   true,
+            "DEF":   "P10",
+            "TYP":   "pwm",
+            "MAP":   "D10",
+            "BIT":   "16",
+            "NUM":   "2",
+            "TIM":   "T3",
+            "MAX":   32767500,
+            "RES":   500
+        },
+        "P11": {
+            "ENA":   true,
+            "DEF":   "P11",
+            "TYP":   "pwm",
+            "MAP":   "D11",
+            "BIT":   "16",
+            "NUM":   "3",
+            "TIM":   "T3",
+            "MAX":   32767500,
+            "RES":   500
+        }
+    },
+    "timer": {
+        "T0": {
+            "DEF":   "T0",
+            "SER":   false,
+            "USE":   [],
+            "SHA":   false
+        },
+        "T1": {
+            "DEF":   "T1",
+            "SER":   false,
+            "USE":   [],
+            "SHA":   false
+        },
+        "T2": {
+            "DEF":   "T2",
+            "SER":   false,
+            "USE":   [],
+            "SHA":   false
+        },
+        "T3": {
+            "DEF":   "T3",
+            "SER":   false,
+            "USE":   [],
+            "SHA":   true
+        }
+
+    },
     "disabled": []
 }
