@@ -1,6 +1,6 @@
 {
     "info": {
-        "name": "linino_one",
+        "name": "arduino_yun_mini",
         "type": "board"
     },
     "layout": {
@@ -72,7 +72,8 @@
             "S5":    "P5",
             "S9":    "P9",
             "S10":   "P10",
-            "S11":   "P11",
+            "S11":   "P11"
+            ,
             "5":     "P5",
             "9":     "P9",
             "10":    "P10",

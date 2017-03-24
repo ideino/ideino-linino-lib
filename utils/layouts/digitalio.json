@@ -1,125 +1,125 @@
 {
-    "info" :{
-            "name":	"digitalio",
-            "type": "shield"
+    "info": {
+        "name":  "digitalio",
+        "type":  "shield"
     },
-    "layout" : {
-		"digital": {
-			"SD0":	"SD0",
-			"SD1":	"SD1",
-			"SD2":	"SD2",
-			"SD3":	"SD3",
-			"SD4":	"SD4",
-			"SD5":	"SD5",
-			"SD6":	"SD6",
-			"SD7":	"SD7",
-			"SD8":	"SD8",
-			"SD9":	"SD9",
-			"SD10":	"SD10",
-			"SD11":	"SD11",
-			"SD12":	"SD12",
-			"SD13":	"SD13",
-			"SD14":	"SD14",
-			"SD15":	"SD15"
-		}
-	},
+    "layout": {
+        "digital": {
+            "SD0":   "SD0",
+            "SD1":   "SD1",
+            "SD2":   "SD2",
+            "SD3":   "SD3",
+            "SD4":   "SD4",
+            "SD5":   "SD5",
+            "SD6":   "SD6",
+            "SD7":   "SD7",
+            "SD8":   "SD8",
+            "SD9":   "SD9",
+            "SD10":  "SD10",
+            "SD11":  "SD11",
+            "SD12":  "SD12",
+            "SD13":  "SD13",
+            "SD14":  "SD14",
+            "SD15":  "SD15"
+        }
+    },
     "register": {
-        "SD0"	:	{
-			"DEF"	: "SD0",
-			"TYP"	: "digital",
-			"NUM"	: "216",
-			"MAP"	: "gpio216"
-		},        
-        "SD1"	:	{
-			"DEF"	: "SD1",
-			"TYP"	: "digital",
-			"NUM"	: "217",
-			"MAP"	: "gpio217"
-		},
-        "SD2"	:	{
-			"DEF"	: "SD2",
-			"TYP"	: "digital",
-			"NUM"	: "218",
-			"MAP"	: "gpio218"
-		},
-		"SD3"	:	{
-			"DEF"	: "SD3",
-			"TYP"	: "digital",
-			"NUM"	: "219",
-			"MAP"	: "gpio219"
-		},
-		"SD4"	:	{
-			"DEF"	: "SD4",
-			"TYP"	: "digital",
-			"NUM"	: "220",
-			"MAP"	: "gpio220"
-		},
-		"SD5"	:	{
-			"DEF"	: "SD5",
-			"TYP"	: "digital",
-			"NUM"	: "221",
-			"MAP"	: "gpio221"
-		},
-		"SD6"	:	{
-			"DEF"	: "SD6",
-			"TYP"	: "digital",
-			"NUM"	: "222",
-			"MAP"	: "gpio222"
-		},
-		"SD7"	:	{
-			"DEF"	: "SD7",
-			"TYP"	: "digital",
-			"NUM"	: "223",
-			"MAP"	: "gpio223"
-		},
-		"SD8"	:	{
-			"DEF"	: "SD8",
-			"TYP"	: "digital",
-			"NUM"	: "224",
-			"MAP"	: "gpio224"
-		},
-		"SD9"	:	{
-			"DEF"	: "SD9",
-			"TYP"	: "digital",
-			"NUM"	: "225",
-			"MAP"	: "gpio225"
-		},
-		"SD10"	:	{
-			"DEF"	: "SD10",
-			"TYP"	: "digital",
-			"NUM"	: "226",
-			"MAP"	: "gpio226"
-		},
-		"SD11"	:	{
-			"DEF"	: "SD11",
-			"TYP"	: "digital",
-			"NUM"	: "227",
-			"MAP"	: "gpio227"
-		},
-		"SD12"	:	{
-			"DEF"	: "SD12",
-			"TYP"	: "digital",
-			"NUM"	: "228",
-			"MAP"	: "gpio228"
-		},
-		"SD13"	:	{
-			"DEF"	: "SD13",
-			"TYP"	: "digital",
-			"NUM"	: "229",
-			"MAP"	: "gpio229"
-		},
-		"SD14"	:	{
-			"DEF"	: "SD14",
-			"TYP"	: "digital",
-			"NUM"	: "230",
-			"MAP"	: "gpio230"
-		},
-		"SD15"	:	{
-			"DEF"	: "SD15",
-			"TYP"	: "digital",
-			"NUM"	: "231",
-			"MAP"	: "gpio231"
-		}
+        "SD0": {
+            "DEF":   "SD0",
+            "TYP":   "digital",
+            "NUM":   "216",
+            "MAP":   "gpio216"
+        },        
+        "SD1": {
+            "DEF":   "SD1",
+            "TYP":   "digital",
+            "NUM":   "217",
+            "MAP":   "gpio217"
+        },
+        "SD2": {
+            "DEF":   "SD2",
+            "TYP":   "digital",
+            "NUM":   "218",
+            "MAP":   "gpio218"
+        },
+        "SD3": {
+            "DEF":   "SD3",
+            "TYP":   "digital",
+            "NUM":   "219",
+            "MAP":   "gpio219"
+        },
+        "SD4": {
+            "DEF":   "SD4",
+            "TYP":   "digital",
+            "NUM":   "220",
+            "MAP":   "gpio220"
+        },
+        "SD5": {
+            "DEF":   "SD5",
+            "TYP":   "digital",
+            "NUM":   "221",
+            "MAP":   "gpio221"
+        },
+        "SD6": {
+            "DEF":   "SD6",
+            "TYP":   "digital",
+            "NUM":   "222",
+            "MAP":   "gpio222"
+        },
+        "SD7": {
+            "DEF":   "SD7",
+            "TYP":   "digital",
+            "NUM":   "223",
+            "MAP":   "gpio223"
+        },
+        "SD8": {
+            "DEF":   "SD8",
+            "TYP":   "digital",
+            "NUM":   "224",
+            "MAP":   "gpio224"
+        },
+        "SD9": {
+            "DEF":   "SD9",
+            "TYP":   "digital",
+            "NUM":   "225",
+            "MAP":   "gpio225"
+        },
+        "SD10": {
+            "DEF":   "SD10",
+            "TYP":   "digital",
+            "NUM":   "226",
+            "MAP":   "gpio226"
+        },
+        "SD11": {
+            "DEF":   "SD11",
+            "TYP":   "digital",
+            "NUM":   "227",
+            "MAP":   "gpio227"
+        },
+        "SD12": {
+            "DEF":   "SD12",
+            "TYP":   "digital",
+            "NUM":   "228",
+            "MAP":   "gpio228"
+        },
+        "SD13": {
+            "DEF":   "SD13",
+            "TYP":   "digital",
+            "NUM":   "229",
+            "MAP":   "gpio229"
+        },
+        "SD14": {
+            "DEF":   "SD14",
+            "TYP":   "digital",
+            "NUM":   "230",
+            "MAP":   "gpio230"
+        },
+        "SD15": {
+            "DEF":   "SD15",
+            "TYP":   "digital",
+            "NUM":   "231",
+            "MAP":   "gpio231"
+        }
     },
     "disabled": ["D8"]
 }
